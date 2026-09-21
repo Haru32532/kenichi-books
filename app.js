@@ -51,10 +51,29 @@ async function findBook(code){
   <p>BOOKOFF店頭価格：<b>${yen(storePrice)}</b>${ceiling}</p>
   <div class="decision ${d.cls}">${d.text}<br><small>${d.cheapest}</small></div>
   <div class=market-grid>
-   <div class=market-card><b>メルカリ</b><small>目立った傷や汚れなし以上</small><p>${yen(hit?.mercariPrice)}</p><a target=_blank rel=noopener href="${links.mercari}">メルカリで検索</a></div>
-   <div class=market-card><b>ラクマ</b><small>目立った傷や汚れなし以上</small><p>${yen(hit?.rakumaPrice)}</p><a target=_blank rel=noopener href="${links.rakuma}">ラクマで検索</a></div>
-   <div class=market-card><b>楽天 VALUE BOOKS</b><small>「良い」以上</small><p>${yen(hit?.valuebooksPrice)}</p><a target=_blank rel=noopener href="${links.valuebooks}">楽天で検索</a></div>
-  </div>
+  <div class="market-card">
+  <b>メルカリ</b>
+  <small>目立った傷や汚れなし以上</small>
+  <p>${yen(hit?.mercariPrice)}</p>
+  <a target="_blank" rel="noopener" href="${links.mercari}">メルカリで検索</a>
+  ${hit ? `<button type="button" onclick="saveMarketPrice('${code}','mercariPrice')">価格を記録</button>` : ""}
+</div>
+
+<div class="market-card">
+  <b>ラクマ</b>
+  <small>目立った傷や汚れなし以上</small>
+  <p>${yen(hit?.rakumaPrice)}</p>
+  <a target="_blank" rel="noopener" href="${links.rakuma}">ラクマで検索</a>
+  ${hit ? `<button type="button" onclick="saveMarketPrice('${code}','rakumaPrice')">価格を記録</button>` : ""}
+</div>
+
+<div class="market-card">
+  <b>VALUE BOOKS</b>
+  <small>「良い」以上</small>
+  <p>${yen(hit?.valuebooksPrice)}</p>
+  <a target="_blank" rel="noopener" href="${links.valuebooks}">楽天で検索</a>
+  ${hit ? `<button type="button" onclick="saveMarketPrice('${code}','valuebooksPrice')">価格を記録</button>` : ""}
+</div>
   <p><small>※検索上限金額はアプリ内の購入判定条件です。外部サイト側の検索結果をその金額以下に自動絞り込みできない場合があります。</small></p>
   ${hit?`<button id=editmarket>比較価格を入力・更新</button>`:`<button id=reg>所有本に登録</button>`}</div>`;
   if(!hit)$("#reg").onclick=()=>{
@@ -66,7 +85,42 @@ async function findBook(code){
     $("#editmarket").onclick=()=>openEdit(hit.id)
   }
  }catch(e){$("#scanout").textContent=e.message}
-}
+}// 中古価格を簡単に記録する
+window.saveMarketPrice = function(isbn, market) {
+  const book = books.find(b => b.isbn === isbn);
+
+  if (!book) {
+    alert("この本はまだ蔵書に登録されていません。");
+    return;
+  }
+
+  const names = {
+    mercariPrice: "メルカリ",
+    rakumaPrice: "ラクマ",
+    valuebooksPrice: "VALUE BOOKS"
+  };
+
+  const current = book[market] ?? "";
+  const input = prompt(
+    `${names[market]}の価格を入力してください（円）`,
+    current
+  );
+
+  if (input === null) return;
+
+  const price = input.replace(/[^\d]/g, "");
+
+  if (!price) {
+    book[market] = null;
+  } else {
+    book[market] = Number(price);
+  }
+
+  book.marketCheckedAt = new Date().toISOString();
+  save();
+
+  findBook(isbn);
+};
 $("#lookup").onclick=()=>findBook($("#isbn").value);$("#storePrice").onchange=()=>{$("#isbn").value&&findBook($("#isbn").value)};$("#maxPrice").onchange=()=>{$("#isbn").value&&findBook($("#isbn").value)};
 $("#camera").onclick=async()=>{if(!("BarcodeDetector"in window))return alert("このブラウザはカメラ読取に未対応です。番号入力を使ってください。");let st=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}),v=$("#video");v.srcObject=st;await v.play();let d=new BarcodeDetector({formats:["ean_13"]}),t=setInterval(async()=>{let x=await d.detect(v).catch(()=>[]);if(x[0]){clearInterval(t);st.getTracks().forEach(y=>y.stop());$("#isbn").value=x[0].rawValue;findBook(x[0].rawValue)}},500)}
 $("#target").onchange=async e=>{let f=e.target.files[0],t=await f.text();targets=f.name.endsWith(".json")?JSON.parse(t):t.split(/\r?\n/).slice(1).filter(Boolean).map(l=>{let[title,author,publisher,isbn,priority,rarity,usedMin,usedMax]=l.split(",");return{title,author,publisher,isbn,priority,rarity,usedMin:+usedMin||null,usedMax:+usedMax||null}});missing()};function missing(){if(!targets.length)return $("#miss").innerHTML="";let a=targets.filter(t=>!books.some(b=>(t.isbn&&b.isbn===t.isbn)||norm(b.title)===norm(t.title))).sort((a,b)=>coll.compare(a.title,b.title));$("#miss").innerHTML=`<p><b>${a.length}</b>冊 未所有</p>`+a.map(x=>`<div class=book><b>${esc(x.title)}</b><span>${esc(x.author||"")}</span><span>${esc(x.publisher||"")}</span><span>${x.usedMin?`¥${x.usedMin}〜${x.usedMax||x.usedMin}`:""}</span><span>${x.rarity?`レア${x.rarity}`:""} ${x.priority?`優先${x.priority}`:""}</span></div>`).join("")}
