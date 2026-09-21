@@ -19,7 +19,7 @@
 <section id="miete" class="tab"><h2>ミーテ読み聞かせ記録</h2><p>ミーテPDFを読み込み、日付・タイトル・回数を保存します。同じ記録の再取込は重複させません。</p><input type="file" id="mietefile" accept="application/pdf" multiple><button id="importMiete">PDFを取り込む</button><div id="mieteout"></div><div id="mieterank"></div></section>
 <section id="analysis" class="tab"><h2>読書・蔵書分析</h2><div class="tools"><select id="ageFilter"><option value="all">全期間</option></select><button id="refreshAnalysis">更新</button></div><div id="ranking"></div><h3>ジャンル別 蔵書バランス</h3><div id="genreChart" class="bars"></div><h3>ジャンル別 読み聞かせ回数</h3><div id="readGenreChart" class="bars"></div><div id="genreAdvice"></div></section>
 <section id="ai" class="tab"><h2>本棚AI相談</h2><p>蔵書・くもん推薦図書・ミーテの読み聞かせ履歴・ジャンル情報を使って相談できます。</p><textarea id="aiq" placeholder="例：1歳5か月で最近あまり読んでいないジャンルは？"></textarea><button id="ask">相談</button><div id="aiStatus" class="muted"></div><pre id="aiout"></pre></section>
-<section id="overseas" class="panel">
+<section id="overseas" class="tab"><div class="panel">
 <h2>海外赴任準備の本</h2>
 <p class="muted">季節・日本文化・昔話・自然・科学・図鑑・音楽・日本語・数などを、現在の蔵書と照合して不足候補を表示します。</p>
 <div class="tools">
@@ -32,8 +32,8 @@
 <p class="muted">現在の蔵書・読み聞かせ傾向・不足ジャンルを使って、追加候補をAIに相談します。</p>
 <button id="askOverseasAI">AIに不足分を相談</button>
 <div id="overseasAI"></div>
-</section>
+</div></section>
 <section id="share" class="tab"><h2>家族共有・バックアップ</h2><div class="backup-box"><h3>バックアップ</h3><p><button id="backup">バックアップを書き出す</button> <label class="filebtn">復元<input type="file" id="restore" accept=".json,application/json"></label></p><div id="backupout"></div></div><h3>お子さんの設定</h3><label>生年月日 <input id="birthDate" type="date" value="2025-04-05"></label><button id="saveSettings">保存</button><hr><input id="sburl" placeholder="Supabase URL"><input id="sbkey" placeholder="Anon key"><input id="email" type="email" placeholder="メール"><input id="password" type="password" placeholder="パスワード"><p><button id="signup">登録</button><button id="login">ログイン</button><button id="sync">同期</button></p><div id="syncout"></div></section>
 </main>
 <dialog id="edit"><form><h3>本の情報</h3><input name="title" placeholder="タイトル" required><input name="author" placeholder="作者"><input name="publisher" placeholder="出版社"><input name="isbn" placeholder="ISBN/JAN"><label><input name="noCode" type="checkbox"> コードなし確認済み（Benesse・Baby Kumon・古書など）</label><input name="publishedDate" placeholder="発売日"><input name="listPrice" type="number" placeholder="定価（税込）"><select name="kumonLevel"><option value="">くもん区分 未設定</option><option>5A</option><option>4A</option><option>3A</option><option>2A</option><option>A</option><option>B</option><option>C</option></select><input name="genreTagsText" placeholder="ジャンル（例：図鑑,自然科学）"><input name="usedMin" type="number" placeholder="中古相場 最安"><input name="usedMax" type="number" placeholder="中古相場 最高"><input name="mercariPrice" type="number" placeholder="メルカリ"><input name="rakumaPrice" type="number" placeholder="ラクマ"><input name="valuebooksPrice" type="number" placeholder="VALUE BOOKS"><select name="rarity"><option value="">レア度</option><option>S</option><option>A</option><option>B</option><option>C</option></select><select name="priority"><option value="">優先度</option><option>S</option><option>A</option><option>B</option><option>C</option></select><p><button type="button" id="cancel">取消</button><button type="submit">保存</button></p></form></dialog>
-<script src="/app.js?v=16"></script></body></html>
+<script src="/app.js?v=22"></script></body></html>
