@@ -13,7 +13,10 @@
     <option value="title">タイトル あいうえお順</option>
     <option value="publisher">出版社別 あいうえお順</option>
   </select>
-  <input id="missingAuthorSearch" type="search" placeholder="作者名で検索" autocomplete="off">
+  <input id="missingAuthorSearch" type="search" placeholder="作者名で検索" autocomplete="off"><select id="missingRarityFilter" aria-label="レア度で絞り込み">
+<option value="">レア度：すべて</option><option value="A">レア度A</option>
+<option value="B">レア度B</option><option value="C">レア度C</option>
+<option value="none">レア度未設定</option></select>
   <button id="clearMissingSearch" type="button">検索解除</button>
 </div><p>年度更新PDFを読み込むと前年度と比較し「2027年追加」「2027年削除」「級変更」を保存します。</p><input type="file" id="kumonPdf" accept="application/pdf"><input id="kumonImportYear" type="number" min="2020" max="2100" placeholder="PDFの年度 例: 2027"><button id="importKumon">PDFを解析</button><div id="kumonDiff"></div></div><div class="panel"><h3>その他の目標リスト</h3><input type="file" id="target" accept=".csv,.json"><div id="miss"></div></div></section>
 <section id="miete" class="tab"><h2>ミーテ読み聞かせ記録</h2><p>ミーテPDFを読み込み、日付・タイトル・回数を保存します。同じ記録の再取込は重複させません。</p><input type="file" id="mietefile" accept="application/pdf" multiple><button id="importMiete">PDFを取り込む</button><div id="mieteout"></div><div id="mieterank"></div></section>
@@ -36,4 +39,4 @@
 <section id="share" class="tab"><h2>家族共有・バックアップ</h2><div class="backup-box"><h3>バックアップ</h3><p><button id="backup">バックアップを書き出す</button> <label class="filebtn">復元<input type="file" id="restore" accept=".json,application/json"></label></p><div id="backupout"></div></div><h3>お子さんの設定</h3><label>生年月日 <input id="birthDate" type="date" value="2025-04-05"></label><button id="saveSettings">保存</button><hr><input id="sburl" placeholder="Supabase URL"><input id="sbkey" placeholder="Anon key"><input id="email" type="email" placeholder="メール"><input id="password" type="password" placeholder="パスワード"><p><button id="signup">登録</button><button id="login">ログイン</button><button id="sync">同期</button></p><div id="syncout"></div></section>
 </main>
 <dialog id="edit"><form><h3>本の情報</h3><input name="title" placeholder="タイトル" required><input name="author" placeholder="作者"><input name="publisher" placeholder="出版社"><input name="isbn" placeholder="ISBN/JAN"><label><input name="noCode" type="checkbox"> コードなし確認済み（Benesse・Baby Kumon・古書など）</label><input name="publishedDate" placeholder="発売日"><input name="listPrice" type="number" placeholder="定価（税込）"><select name="kumonLevel"><option value="">くもん区分 未設定</option><option>5A</option><option>4A</option><option>3A</option><option>2A</option><option>A</option><option>B</option><option>C</option></select><input name="genreTagsText" placeholder="ジャンル（例：図鑑,自然科学）"><input name="usedMin" type="number" placeholder="中古相場 最安"><input name="usedMax" type="number" placeholder="中古相場 最高"><input name="mercariPrice" type="number" placeholder="メルカリ"><input name="rakumaPrice" type="number" placeholder="ラクマ"><input name="valuebooksPrice" type="number" placeholder="VALUE BOOKS"><select name="rarity"><option value="">レア度</option><option>S</option><option>A</option><option>B</option><option>C</option></select><select name="priority"><option value="">優先度</option><option>S</option><option>A</option><option>B</option><option>C</option></select><p><button type="button" id="cancel">取消</button><button type="submit">保存</button></p></form></dialog>
-<script src="/app.js?v=24"></script></body></html>
+<script src="/app.js?v=26"></script></body></html>

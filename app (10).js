@@ -159,8 +159,14 @@ function missingPublisherKey(x){return publisherKana[x.publisher]||String(x.publ
 function renderMissingList(){
   const year=$('#kumonYear').value||'2026',lv=$('#kumonLevelFilter').value;
   const q=norm($('#missingAuthorSearch')?.value||'');
+  const rarity=$('#missingRarityFilter')?.value||'';
   const sort=$('#missingSort')?.value||'title';
-  let a=currentMissing.filter(x=>!q||norm(x.author).includes(q));
+  let a=currentMissing.filter(x=>{
+    const authorOk=!q||norm(x.author).includes(q);
+    const rv=String(x.rarity||'').trim().toUpperCase();
+    const rarityOk=!rarity||(rarity==='none'?!rv:rv===rarity);
+    return authorOk&&rarityOk;
+  });
   a.sort((x,y)=>{
     if(sort==='publisher'){
       const p=coll.compare(missingPublisherKey(x),missingPublisherKey(y));
@@ -186,12 +192,30 @@ function loadMissingList(){
 $('#showKumonMissing').onclick=loadMissingList;
 $('#missingSort').onchange=()=>{if(currentMissing.length)renderMissingList()};
 $('#missingAuthorSearch').oninput=()=>{if(currentMissing.length)renderMissingList()};
-$('#clearMissingSearch').onclick=()=>{$('#missingAuthorSearch').value='';if(currentMissing.length)renderMissingList()};
+$('#missingRarityFilter').onchange=()=>{if(currentMissing.length)renderMissingList()};
+$('#clearMissingSearch').onclick=()=>{$('#missingAuthorSearch').value='';$('#missingRarityFilter').value='';if(currentMissing.length)renderMissingList()};
 
-function ageOptions(){let logs=readLog(),vals=[...new Set(logs.map(x=>x.ageMonths).filter(x=>x>=0))].sort((a,b)=>a-b);$('#ageFilter').innerHTML='<option value="all">全期間</option>'+vals.map(m=>`<option value="${m}">${Math.floor(m/12)}歳${m%12}か月</option>`).join('')}
-function genreOf(b){let t=bookTags(b).filter(x=>!x.startsWith('くもん'));return t[0]||'未分類'}
+function ageOptions(selected){
+ let logs=readLog(),vals=[...new Set(logs.map(x=>Number(x.ageMonths)).filter(x=>Number.isFinite(x)&&x>=0))].sort((a,b)=>a-b);
+ const sel=selected==null?($('#ageFilter')?.value||'all'):String(selected);
+ $('#ageFilter').innerHTML='<option value="all">全期間</option>'+vals.map(m=>`<option value="${m}">${Math.floor(m/12)}歳${m%12}か月</option>`).join('');
+ $('#ageFilter').value=(sel==='all'||vals.map(String).includes(sel))?sel:'all';
+}
 function barHtml(data){let arr=Object.entries(data).sort((a,b)=>b[1]-a[1]),max=Math.max(...arr.map(x=>x[1]),1),sum=arr.reduce((s,x)=>s+x[1],0)||1;return arr.map(([k,v])=>`<div class=barrow><span>${esc(k)}</span><div class=bar><i style="width:${Math.max(2,v/max*100)}%"></i></div><b>${Math.round(v/sum*100)}%</b></div>`).join('')}
-function renderAnalysis(){ageOptions();let v=$('#ageFilter').value||'all',logs=readLog().filter(x=>v==='all'||String(x.ageMonths)===v);$('#ranking').innerHTML=`<h3>${v==='all'?'全期間':ageAtLabel(+v)} よく読んだ本</h3>`+rankHtml(aggregateRanking(logs).slice(0,20));let stock={},reads={};for(const b of books){let g=genreOf(b);stock[g]=(stock[g]||0)+1}for(const x of logs){let b=books.find(z=>z.id===x.bookId),g=b?genreOf(b):'未分類';reads[g]=(reads[g]||0)+(+x.count||0)}$('#genreChart').innerHTML=barHtml(stock);$('#readGenreChart').innerHTML=barHtml(reads);let sorted=Object.entries(stock).filter(([k])=>k!=='未分類').sort((a,b)=>a[1]-b[1]).slice(0,3);$('#genreAdvice').innerHTML=sorted.length?`<div class=panel><b>蔵書数が少ないジャンル</b><p>${sorted.map(([k,v])=>`${esc(k)} ${v}冊`).join(' ／ ')}</p><small>不足と断定するものではなく、追加購入を検討するときの参考表示です。</small></div>`:''}
+function renderAnalysis(){
+ const selected=$('#ageFilter')?.value||'all';
+ ageOptions(selected);
+ let v=$('#ageFilter').value||'all',logs=readLog().filter(x=>v==='all'||String(x.ageMonths)===v);
+ const total=logs.reduce((s,x)=>s+(+x.count||0),0);
+ const days=new Set(logs.map(x=>x.date).filter(Boolean)).size;
+ $('#ranking').innerHTML=`<div class="panel"><b>${v==='all'?'全期間':ageAtLabel(+v)}の読み聞かせ</b><p><strong>${total}回</strong> ／ 記録日 ${days}日</p></div><h3>${v==='all'?'全期間':ageAtLabel(+v)} よく読んだ本</h3>`+rankHtml(aggregateRanking(logs).slice(0,20));
+ let stock={},reads={};
+ for(const b of books){let g=genreOf(b);stock[g]=(stock[g]||0)+1}
+ for(const x of logs){let b=books.find(z=>z.id===x.bookId),g=b?genreOf(b):'未分類';reads[g]=(reads[g]||0)+(+x.count||0)}
+ $('#genreChart').innerHTML=barHtml(stock);$('#readGenreChart').innerHTML=barHtml(reads);
+ let sorted=Object.entries(stock).filter(([k])=>k!=='未分類').sort((a,b)=>a[1]-b[1]).slice(0,3);
+ $('#genreAdvice').innerHTML=sorted.length?`<div class=panel><b>蔵書数が少ないジャンル</b><p>${sorted.map(([k,v])=>`${esc(k)} ${v}冊`).join(' ／ ')}</p><small>不足と断定するものではなく、追加購入を検討するときの参考表示です。</small></div>`:'';
+}
 function ageAtLabel(m){return`${Math.floor(m/12)}歳${m%12}か月`}
 $('#ageFilter').onchange=renderAnalysis;$('#refreshAnalysis').onclick=renderAnalysis;
 
@@ -223,7 +247,7 @@ async function mergeBundledMiete(){
  const old=readLog(),map=new Map(old.map(x=>[x.id,x]));let added=0;
  for(const e of (j.events||[])){let b=findBookByTitle(e.title);if(!b)continue;let x={...e,bookId:b.id,ageMonths:ageMonthsForDate(e.date)};if(!map.has(x.id)){map.set(x.id,x);added++}}
  if(added){saveReadLog([...map.values()].sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time)));recalcReadCounts();save()}
- window._mieteBundle=j;if($('#mieteout'))$('#mieteout').innerHTML=`<p><b>保存済みミーテPDFを自動反映</b>：2026年4・5・6・8月／蔵書と照合できた ${j.events.length}件</p><small>歌・Baby Kumon活動は絵本回数と分離しています。</small>`;
+ window._mieteBundle=j;if($('#mieteout'))$('#mieteout').innerHTML=`<p><b>保存済みミーテPDFを自動反映</b>：2026年2・3・4・5・6・7・8月／蔵書と照合できた ${j.events.length}件</p><small>歌・Baby Kumon活動は絵本回数と分離しています。</small>`;
 }
 function metaLine(b){let bits=[];if(b.author)bits.push('作者：'+esc(b.author));if(b.illustrator)bits.push('絵：'+esc(b.illustrator));if(b.publisher)bits.push('出版社：'+esc(b.publisher));if(b.publishedDate)bits.push('発売・初版：'+esc(b.publishedDate));if(b.isbn)bits.push('ISBN：'+esc(b.isbn));return bits.join(' ／ ')}
 function integratedSummary(){
