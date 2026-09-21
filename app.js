@@ -87,3 +87,50 @@ if(restoreInput) restoreInput.onchange=async e=>{
     if(backupOut) backupOut.textContent=`${books.length}件を復元しました。`;
   }catch(err){ if(backupOut) backupOut.textContent="復元できませんでした: "+err.message; }
 };
+// iPhone / Safari対応 ZXing バーコードスキャナー
+let zxingControls = null;
+
+$('#scan').onclick = async () => {
+  const video = $('#video');
+
+  if (!window.ZXingBrowser) {
+    alert('バーコード読取機能を読み込めませんでした。ページを再読み込みしてください。');
+    return;
+  }
+
+  try {
+    if (zxingControls) {
+      zxingControls.stop();
+      zxingControls = null;
+    }
+
+    const codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+
+    zxingControls = await codeReader.decodeFromVideoDevice(
+      undefined,
+      video,
+      async (result, error, controls) => {
+        if (!result) return;
+
+        const code = result.getText().replace(/\D/g, '');
+
+        // 日本の書籍ISBN（978/979）または13桁JANを対象
+        if (code.length !== 13) return;
+
+        controls.stop();
+        zxingControls = null;
+
+        $('#isbn').value = code;
+
+        try {
+          await findBook(code);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    );
+  } catch (e) {
+    console.error(e);
+    alert('カメラを開始できませんでした。iPhoneのカメラ許可を確認してください。');
+  }
+};
