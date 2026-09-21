@@ -24,7 +24,62 @@ function bookTags(b){let a=[];if(b.kumonLevel)a.push("くもん"+b.kumonLevel);i
 function render(){let q=norm($("#q").value),gf=$("#genreFilter")?.value||"",a=books.filter(b=>(!q||norm([b.title,b.author,b.publisher,b.isbn,...bookTags(b)].join(" ")).includes(q))&&(!gf||bookTags(b).some(t=>t===gf||t.includes(gf)))).sort(cmp);$("#stats").innerHTML=`<div class=stat><b>${books.length}</b><br>所有タイトル</div><div class=stat><b>${books.filter(b=>b.isbn).length}</b><br>ISBN登録</div><div class=stat><b>${books.reduce((n,b)=>n+(+b.readCount||0),0)}</b><br>読み聞かせ</div><div class=stat><b>${books.filter(b=>b.rarity==="S").length}</b><br>レアS</div>`;$("#list").innerHTML=a.map(b=>`<div class=book data-id="${b.id}"><div><b>${esc(b.title)}</b><div class=tags>${bookTags(b).map(t=>`<span class=tag>${esc(t)}</span>`).join("")}</div></div><div>${esc(b.author||"")}<br><small>作者</small></div><div>${esc(b.publisher||"")}<br><small>出版社</small></div><div>${b.usedMin!=null?`中古 ¥${b.usedMin}〜${b.usedMax??b.usedMin}`:"相場未設定"}<br><small>${b.mercariPrice!=null?`メルカリ ¥${b.mercariPrice}`:""} ${b.rakumaPrice!=null?`/ ラクマ ¥${b.rakumaPrice}`:""} ${b.valuebooksPrice!=null?`/ VB ¥${b.valuebooksPrice}`:""}</small></div><div>${b.rarity?`レア${b.rarity}`:""}<br>${b.priority?`優先${b.priority}`:""}</div></div>`).join("");$$(".book").forEach(x=>x.onclick=()=>openEdit(x.dataset.id));missing()}
 $$("nav button").forEach(b=>b.onclick=()=>{$$("nav button,.tab").forEach(x=>x.classList.remove("on"));b.classList.add("on");$("#"+b.dataset.tab).classList.add("on")});$("#q").oninput=render;$("#sort").onchange=render;$("#genreFilter").onchange=render;$("#pdf").onclick=()=>print();$("#add").onclick=()=>openEdit();$("#cancel").onclick=()=>$("#edit").close();
 function openEdit(id){editId=id||null;let b=books.find(x=>x.id===id)||{},f=$("#edit form");["title","author","publisher","isbn","usedMin","usedMax","mercariPrice","rakumaPrice","valuebooksPrice","rarity","priority","kumonLevel"].forEach(k=>f.elements[k].value=b[k]??"");f.elements.genreTagsText.value=(Array.isArray(b.genreTags)?b.genreTags:[b.genre].filter(Boolean)).join(",");$("#edit").showModal()}$("#edit form").onsubmit=e=>{e.preventDefault();let f=e.target,v=Object.fromEntries(new FormData(f)),b=books.find(x=>x.id===editId);if(!b){b={id:crypto.randomUUID(),owned:true,readCount:0};books.push(b)}Object.assign(b,v,{genreTags:v.genreTagsText.split(/[,、]/).map(x=>x.trim()).filter(Boolean),usedMin:v.usedMin===""?null:+v.usedMin,usedMax:v.usedMax===""?null:+v.usedMax,mercariPrice:v.mercariPrice===""?null:+v.mercariPrice,rakumaPrice:v.rakumaPrice===""?null:+v.rakumaPrice,valuebooksPrice:v.valuebooksPrice===""?null:+v.valuebooksPrice,marketCheckedAt:new Date().toISOString()});delete b.genreTagsText;save();$("#edit").close();render()}
-async function lookup(code){code=(code||"").replace(/\D/g,"");if(code.length!==13)throw Error("13桁で入力してください");let hit=books.find(b=>b.isbn===code),j=await fetch(`https://api.openbd.jp/v1/get?isbn=${code}`).then(r=>r.json()),s=j?.[0]?.summary||{};return{hit,info:{isbn:code,title:s.title||hit?.title||"",author:s.author||hit?.author||"",publisher:s.publisher||hit?.publisher||""}}}
+async function lookup(code){// スキャンした本を既存の所有本と照合し、ISBNを自動で紐付ける
+function linkScannedIsbn(info) {
+  if (!info?.isbn || !info?.title) return null;
+
+  // すでに同じISBNが登録されていれば、その本を返す
+  const isbnHit = books.find(
+    b => String(b.isbn || "") === String(info.isbn)
+  );
+
+  if (isbnHit) return isbnHit;
+
+  // タイトル比較専用の正規化
+  // 全角半角・空白・句読点・記号などの違いを吸収する
+  const normalizeTitle = s =>
+    String(s || "")
+      .normalize("NFKC")
+      .toLowerCase()
+      .replace(/[\s　・･\-―ー!！?？。、,，:：;；「」『』（）()【】\[\]]/g, "");
+
+  const scannedTitle = normalizeTitle(info.title);
+
+  // ISBNがまだ入っていない所有本から、
+  // 正規化後のタイトルが完全一致するものだけを探す
+  const candidates = books.filter(b =>
+    b.owned === true &&
+    !b.isbn &&
+    normalizeTitle(b.title) === scannedTitle
+  );
+
+  // 1冊だけ一致した場合のみ自動登録
+  // 複数候補がある場合は誤登録防止のため何もしない
+  if (candidates.length !== 1) {
+    return null;
+  }
+
+  const book = candidates[0];
+
+  // ISBNを既存本へ追加
+  book.isbn = info.isbn;
+
+  // 空欄の書誌情報だけ補完
+  if (!book.author && info.author) {
+    book.author = info.author;
+  }
+
+  if (!book.publisher && info.publisher) {
+    book.publisher = info.publisher;
+  }
+
+  // スキャンで確認できた日時も残す
+  book.isbnCheckedAt = new Date().toISOString();
+
+  save();
+
+  return book;
+}code=(code||"").replace(/\D/g,"");if(code.length!==13)throw Error("13桁で入力してください");let hit=books.find(b=>b.isbn===code),j=await fetch(`https://api.openbd.jp/v1/get?isbn=${code}`).then(r=>r.json()),s=j?.[0]?.summary||{};return{hit,info:{isbn:code,title:s.title||hit?.title||"",author:s.author||hit?.author||"",publisher:s.publisher||hit?.publisher||""}}}
 function marketLinks(info){let term=encodeURIComponent([info.title,info.author].filter(Boolean).join(" "));return{
 mercari:`https://jp.mercari.com/search?keyword=${term}`,
 rakuma:`https://fril.jp/s?query=${term}`,
