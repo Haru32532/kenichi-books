@@ -1,0 +1,54 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>けんいちくんの本棚</title>
+<meta name="theme-color" content="#b96f63">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="けんいち本棚">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="manifest" href="/manifest.webmanifest"><link rel="stylesheet" href="/style.css"></head><body>
+<header><div><b>けんいちくんの本棚</b><small>iPhone対応｜蔵書・BOOKOFF・読み聞かせ</small></div><button id="pdf">PDF</button></header>
+<nav><button data-tab="library" class="on">本棚</button><button data-tab="scan">スキャン</button><button data-tab="missing">足りない本</button><button data-tab="miete">ミーテ</button><button data-tab="ai">AI</button><button data-tab="share">共有</button></nav><main>
+<section id="library" class="tab on"><div id="stats"></div><div class="tools"><input id="q" placeholder="検索"><select id="sort">
+<option value="title">タイトル あいうえお順</option>
+<option value="author">作者 あいうえお順</option>
+<option value="publisher">出版社 あいうえお順</option>
+<option value="priceAsc">中古相場 安い順</option>
+<option value="priceDesc">中古相場 高い順</option>
+<option value="mercariAsc">メルカリ価格 安い順</option>
+<option value="rakumaAsc">ラクマ価格 安い順</option>
+<option value="valuebooksAsc">VALUE BOOKS価格 安い順</option>
+<option value="rarity">レア度順</option>
+<option value="priority">優先度順</option>
+</select>
+<select id="genreFilter">
+<option value="">全ジャンル</option>
+<option>くもん5A</option><option>くもん4A</option><option>くもん3A</option><option>くもん2A</option><option>くもんA</option><option>くもんB以上</option>
+<option>家庭保育園</option><option>季節</option><option>図鑑</option><option>昔話</option><option>名作</option><option>文化</option><option>自然科学</option><option>算数</option><option>英語</option>
+</select><button id="add">＋本</button></div><div id="list"></div></section>
+<section id="scan" class="tab"><h2>BOOKOFFモード</h2>
+<p>店頭価格と、メルカリ・ラクマ・楽天市場 VALUE BOOKS の比較価格を同じ画面で管理します。</p>
+<div class="market-note">メルカリ／ラクマは「新品・未使用」「未使用に近い」「目立った傷や汚れなし」を比較対象。VALUE BOOKSは商品状態「良い」以上を比較対象として記録します。</div>
+<video id="video" playsinline></video><p><button id="camera">カメラ開始</button></p><div class="price-search">
+<input id="isbn" inputmode="numeric" placeholder="ISBN/JAN 13桁">
+<input id="storePrice" inputmode="numeric" type="number" min="0" placeholder="BOOKOFF店頭価格（円）">
+<input id="maxPrice" inputmode="numeric" type="number" min="0" placeholder="検索上限金額（円・任意）">
+<button id="lookup">価格比較して検索</button>
+</div>
+<div id="scanout"></div></section>
+<section id="missing" class="tab"><h2>足りない本</h2><p>目標リストCSV（title,author,publisher,isbn,priority,rarity,usedMin,usedMax）またはJSONを取り込みます。</p><input type="file" id="target" accept=".csv,.json"><div id="miss"></div></section>
+<section id="miete" class="tab"><h2>ミーテPDF</h2><p>PDF内の文字から所有タイトルを照合し、読み聞かせ記録候補を作ります。</p><input type="file" id="mietefile" accept="application/pdf"><div id="mieteout"></div></section>
+<section id="ai" class="tab"><h2>ChatGPT</h2><textarea id="aiq" placeholder="所有本を分析して…"></textarea><button id="ask">相談</button><pre id="aiout"></pre><h3>Copilot</h3><p>公開URLの <code>/api/library</code> をCopilot Studioから参照できます。OpenAPI雛形を同梱しています。</p></section>
+<section id="share" class="tab"><h2>家族共有・バックアップ</h2>
+<div class="backup-box"><h3>iPhoneデータのバックアップ</h3>
+<p>機種変更やSafariデータ消去に備えて、蔵書データをJSONで保存・復元できます。</p>
+<p><button id="backup">バックアップを書き出す</button> <label class="filebtn">バックアップを復元<input type="file" id="restore" accept=".json,application/json"></label></p>
+<div id="backupout"></div></div><p>Supabaseを設定すると、同じメールアドレスで複数端末から同期できます。</p><input id="sburl" placeholder="Supabase URL"><input id="sbkey" placeholder="Anon key"><input id="email" type="email" placeholder="メール"><input id="password" type="password" placeholder="パスワード"><p><button id="signup">登録</button><button id="login">ログイン</button><button id="sync">同期</button></p><div id="syncout"></div></section>
+</main>
+<div id="installHelp" class="install-help"><b>iPhoneに追加</b><span>Safariの共有 →「ホーム画面に追加」→「Webアプリとして開く」</span><button id="hideInstall">×</button></div>
+<dialog id="edit"><form><h3>本の情報</h3><input name="title" placeholder="タイトル" required><input name="author" placeholder="作者"><input name="publisher" placeholder="出版社"><input name="isbn" placeholder="ISBN/JAN">
+<select name="kumonLevel"><option value="">くもん区分 未設定</option><option>5A</option><option>4A</option><option>3A</option><option>2A</option><option>A</option><option>B以上</option></select>
+<input name="genreTagsText" placeholder="ジャンル（例：家庭保育園,季節,昔話）">
+<input name="usedMin" type="number" placeholder="中古相場 最安"><input name="usedMax" type="number" placeholder="中古相場 最高">
+<input name="mercariPrice" type="number" placeholder="メルカリ比較価格（目立った傷や汚れなし以上）">
+<input name="rakumaPrice" type="number" placeholder="ラクマ比較価格（目立った傷や汚れなし以上）">
+<input name="valuebooksPrice" type="number" placeholder="楽天 VALUE BOOKS価格（良い以上）">
+<select name="rarity"><option value="">レア度</option><option>S</option><option>A</option><option>B</option><option>C</option></select><select name="priority"><option value="">優先度</option><option>S</option><option>A</option><option>B</option><option>C</option></select><p><button type="button" id="cancel">取消</button><button type="submit">保存</button></p></form></dialog><script src="/app.js"></script></body></html>

@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/ai",
+      "destination": "/api/ai.mjs"
+    },
+    {
+      "source": "/api/library",
+      "destination": "/api/library.mjs"
+    }
+  ]
+}
