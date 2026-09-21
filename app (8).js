@@ -9,6 +9,77 @@ const readLog=()=>JSON.parse(localStorage.getItem('mieteLog')||'[]');
 const saveReadLog=a=>localStorage.setItem('mieteLog',JSON.stringify(a));
 const kumonMaster=()=>JSON.parse(localStorage.getItem('kumonMaster')||'{}');
 const saveKumon=o=>localStorage.setItem('kumonMaster',JSON.stringify(o));
+const KUMON_2026_URL='https://www.kumon.ne.jp/dokusho/pdf/suisen.pdf?20260401';
+
+async function ensureKumon2026(){
+  const master=kumonMaster();
+  if(master['2026']?.length>=600)return true;
+  try{
+    const r=await fetch(KUMON_2026_URL,{cache:'no-store'});
+    if(!r.ok)throw new Error('KUMON PDF '+r.status);
+    const buf=await r.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    let text='';
+    for(let p=1;p<=pdf.numPages;p++){
+      const page=await pdf.getPage(p);
+      const tc=await page.getTextContent();
+      // Keep x/y positions so the 6/7-column official table can be reconstructed.
+      const rows=new Map();
+      for(const it of tc.items){
+        const y=Math.round(it.transform[5]);
+        if(!rows.has(y))rows.set(y,[]);
+        rows.get(y).push({x:it.transform[4],t:it.str});
+      }
+      for(const [,items] of [...rows.entries()].sort((a,b)=>b[0]-a[0])){
+        text += items.sort((a,b)=>a.x-b.x).map(x=>x.t).join('\t')+'\n';
+      }
+    }
+    const list=parseKumon2026Table(text);
+    if(list.length<600)throw new Error('抽出件数 '+list.length+'冊');
+    master['2026']=list;
+    saveKumon(master);
+    applyKumonToOwned(list);
+    return true;
+  }catch(e){
+    console.warn('KUMON 2026 auto sync failed',e);
+    return false;
+  }
+}
+
+function parseKumon2026Table(text){
+  // Official 2026 PDF is a fixed table: page 1 = 5A,4A,3A,2A,A,B / page 2 = C,D,E,F,G,H,I.
+  // First try the existing parser. If PDF text order is usable this is the safest path.
+  let a=parseKumon(text,2026);
+  if(a.length>=600)return a.map(x=>({title:x.title,level:x.level,year:2026,comment:''}));
+  // Position-preserving fallback: detect level markers then collect title-looking cells.
+  const levels=['5A','4A','3A','2A','A','B','C','D','E','F','G','H','I'];
+  const out=[], seen=new Set();
+  let current='';
+  for(const raw of text.split(/\n+/)){
+    const cells=raw.split('\t').map(x=>x.trim()).filter(Boolean);
+    for(const cell of cells){
+      const lm=cell.match(/^(5A|4A|3A|2A|A|B|C|D|E|F|G|H|I)$/);
+      if(lm){current=lm[1];continue}
+      if(!current)continue;
+      const title=cell.replace(/^\d+[\.．\s]*/,'').trim();
+      if(title.length<2||title.length>80)continue;
+      if(/年度版|すいせん図書|一覧表|出版社|教材|発行|©|Kumon|公文教育研究会/.test(title))continue;
+      if(/^(福音館書店|偕成社|童心社|講談社|ポプラ社|岩波書店|新潮社|くもん出版|評論社|文研出版|金の星社|岩崎書店|小学館|KADOKAWA|角川書店)$/.test(title))continue;
+      const k=current+'|'+norm(title);
+      if(!seen.has(k)){seen.add(k);out.push({title,level:current,year:2026,comment:''})}
+    }
+  }
+  return out;
+}
+
+function applyKumonToOwned(list){
+  let changed=false;
+  for(const x of list){
+    const b=books.find(z=>norm(z.title)===norm(x.title));
+    if(b && b.kumonLevel!==x.level){b.kumonLevel=x.level;changed=true}
+  }
+  if(changed)save();
+}
 const birth=()=>localStorage.getItem('birthDate')||'2025-04-05';
 
 function migrate(){
@@ -25,6 +96,7 @@ function migrate(){
 async function init(){
  migrate(); books=JSON.parse(localStorage.getItem('kb')||'null')||await fetch('/initial_books.json',{cache:'no-store'}).then(r=>r.json());
  $('#birthDate').value=birth(); recalcReadCounts(); render(); renderKumonYears(); renderAnalysis();
+ ensureKumon2026().then(ok=>{if(ok){render();renderKumonYears();}});
 }
 function bookTags(b){let a=[];if(b.kumonLevel)a.push('くもん'+b.kumonLevel);if(Array.isArray(b.genreTags))a.push(...b.genreTags);else if(b.genre)a.push(b.genre);return[...new Set(a.filter(Boolean))]}
 function cmp(a,b){let s=$('#sort').value;if(s==='author')return coll.compare(a.author||'ん',b.author||'ん');if(s==='publisher')return coll.compare(a.publisher||'ん',b.publisher||'ん');if(s==='readDesc')return(b.readCount||0)-(a.readCount||0);if(s==='priceAsc')return(a.usedMin??1e9)-(b.usedMin??1e9);if(s==='rarity')return'SABC'.indexOf(a.rarity||'Z')-'SABC'.indexOf(b.rarity||'Z');if(s==='priority')return'SABC'.indexOf(a.priority||'Z')-'SABC'.indexOf(b.priority||'Z');return coll.compare(a.title,b.title)}
@@ -92,7 +164,7 @@ function ageAtLabel(m){return`${Math.floor(m/12)}歳${m%12}か月`}
 $('#ageFilter').onchange=renderAnalysis;$('#refreshAnalysis').onclick=renderAnalysis;
 
 $('#saveSettings').onclick=()=>{localStorage.setItem('birthDate',$('#birthDate').value||'2025-04-05');let l=readLog();l.forEach(x=>x.ageMonths=ageAt(x.date).months);saveReadLog(l);renderAnalysis();alert('保存しました')};
-$('#backup').onclick=()=>{let payload={app:'けんいちくんの本棚',version:'1.0',exportedAt:new Date().toISOString(),books,mieteLog:readLog(),kumonMaster:kumonMaster(),birthDate:birth()};let blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`kenichi-books-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('#backupout').textContent='バックアップを書き出しました。'};
+$('#backup').onclick=()=>{let payload={app:'けんいちくんの本棚',version:'1.0',exportedAt:new Date().toISOString(),books,mieteLog:[],kumonMaster:kumonMaster(),birthDate:birth()};let blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`kenichi-books-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('#backupout').textContent='バックアップを書き出しました。'};
 $('#restore').onchange=async e=>{try{let j=JSON.parse(await e.target.files[0].text()),r=Array.isArray(j)?j:j.books;if(!Array.isArray(r))throw Error('本棚データがありません');books=r;save();if(j.mieteLog)saveReadLog(j.mieteLog);if(j.kumonMaster)saveKumon(j.kumonMaster);if(j.birthDate)localStorage.setItem('birthDate',j.birthDate);render();renderAnalysis();$('#backupout').textContent='復元しました。'}catch(err){$('#backupout').textContent='復元できませんでした: '+err.message}};
 
 $('#ask').onclick=async()=>{let q=$('#aiq').value.trim();if(!q)return;$('#aiout').textContent='考え中…';$('#aiStatus').textContent='蔵書・ミーテ・くもんデータを参照しています';let c={books:books.map(({title,author,publisher,genre,isbn,readCount,kumonLevel,genreTags})=>({title,author,publisher,genre,isbn,readCount,kumonLevel,genreTags})),mieteLog:[],kumonMaster:kumonMaster(),birthDate:birth()};try{let r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,context:c})}),raw=await r.text(),j={};try{j=raw?JSON.parse(raw):{}}catch(_){throw Error(`AI APIが見つかりません (${r.status})。/api/ai のデプロイを確認してください。`)}if(!r.ok)throw Error(j.error||`AI通信エラー (${r.status})`);$('#aiout').textContent=j.text||'回答を生成できませんでした。';$('#aiStatus').textContent=''}catch(e){$('#aiStatus').textContent='AI接続エラー';$('#aiout').textContent=e.message||String(e)}};
