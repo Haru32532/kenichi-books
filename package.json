@@ -1,9 +1,10 @@
 {
   "name": "kenichi-books-iphone",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node --check public/app.js && node --check api/ai.mjs && node --check api/library.mjs"
+    "build": "node build.mjs",
+    "check": "node --check public/app.js && node --check api/ai.mjs && node --check api/library.mjs && node --check build.mjs"
   }
 }
