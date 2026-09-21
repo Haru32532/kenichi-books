@@ -135,7 +135,7 @@ function render(){
 }
 $$('nav button').forEach(b=>b.onclick=()=>{$$('nav button,.tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('#'+b.dataset.tab).classList.add('on');if(b.dataset.tab==='analysis')renderAnalysis()});
 $('#q').oninput=render;$('#sort').onchange=render;$('#genreFilter').onchange=render;$('#pdf').onclick=()=>print();$('#add').onclick=()=>openEdit();$('#cancel').onclick=()=>$('#edit').close();
-function openEdit(id){editId=id||null;let b=books.find(x=>x.id===id)||{},f=$('#edit form');['title','author','publisher','isbn','publishedDate','listPrice','usedMin','usedMax','mercariPrice','rakumaPrice','valuebooksPrice','rarity','priority','kumonLevel'].forEach(k=>f.elements[k].value=b[k]??'');f.elements.noCode.checked=!!b.noCode;f.elements.genreTagsText.value=(Array.isArray(b.genreTags)?b.genreTags:[b.genre].filter(Boolean)).join(',');$('#edit').showModal()}
+function openEdit(id){editId=id||null;let b=books.find(x=>x.id===id)||{},f=$('#edit form');['title','author','illustrator','translator','publisher','isbn','publishedDate','listPrice','usedMin','usedMax','mercariPrice','rakumaPrice','valuebooksPrice','rarity','priority','kumonLevel'].forEach(k=>f.elements[k].value=b[k]??'');f.elements.noCode.checked=!!b.noCode;f.elements.genreTagsText.value=(Array.isArray(b.genreTags)?b.genreTags:[b.genre].filter(Boolean)).join(',');$('#edit').showModal()}
 $('#edit form').onsubmit=e=>{e.preventDefault();let f=e.target,v=Object.fromEntries(new FormData(f)),b=books.find(x=>x.id===editId);if(!b){b={id:crypto.randomUUID(),owned:true,readCount:0};books.push(b)}Object.assign(b,v,{noCode:f.elements.noCode.checked,genreTags:v.genreTagsText.split(/[,、]/).map(x=>x.trim()).filter(Boolean),listPrice:v.listPrice===''?null:+v.listPrice,usedMin:v.usedMin===''?null:+v.usedMin,usedMax:v.usedMax===''?null:+v.usedMax,mercariPrice:v.mercariPrice===''?null:+v.mercariPrice,rakumaPrice:v.rakumaPrice===''?null:+v.rakumaPrice,valuebooksPrice:v.valuebooksPrice===''?null:+v.valuebooksPrice});delete b.genreTagsText;if(b.noCode&&!b.codeStatus)b.codeStatus='no-code-confirmed';save();$('#edit').close();render();renderScanProgress()};
 
 function deepValues(obj,key,out=[]){if(!obj||typeof obj!=='object')return out;for(const [k,v] of Object.entries(obj)){if(k.toLowerCase()===key.toLowerCase())out.push(v);if(v&&typeof v==='object')deepValues(v,key,out)}return out}
@@ -279,15 +279,35 @@ function conf(){return{url:$('#sburl').value.replace(/\/$/,''),key:$('#sbkey').v
 
 let libraryMetadata=[];
 
+
+function mergeBibliographicMaster(){
+ if(!Array.isArray(libraryMetadata)||!libraryMetadata.length)return 0;
+ let n=0;
+ const byTitle=new Map(libraryMetadata.map(x=>[titleMatchKey(x.title),x]));
+ for(const b of books){
+   const m=byTitle.get(titleMatchKey(b.title)); if(!m)continue;
+   let changed=false;
+   for(const k of ['author','illustrator','translator','publisher','publishedDate','genre','kumonLevel']){
+     if(!b[k] && m[k]){b[k]=m[k];changed=true}
+   }
+   if((!Array.isArray(b.genreTags)||!b.genreTags.length) && m.genre){
+     b.genreTags=[m.genre]; changed=true;
+   }
+   if(changed){b.bibliographyMergedAt=new Date().toISOString();n++}
+ }
+ if(n)save();
+ return n;
+}
+
 function libraryCompletionStats(){
- const owned=books.filter(b=>b.owned!==false), fields=['author','publisher','publishedDate','isbn'];
+ const owned=books.filter(b=>b.owned!==false), fields=['author','illustrator','translator','publisher','publishedDate','isbn'];
  const counts=Object.fromEntries(fields.map(k=>[k,owned.filter(b=>String(b[k]||'').trim()).length]));
  return {total:owned.length,...counts};
 }
 function renderLibraryEnrichStatus(msg=''){
  if(!$('#libraryEnrichStatus'))return;
  const s=libraryCompletionStats();
- $('#libraryEnrichStatus').innerHTML=`<p><b>現在 ${s.total}冊</b> ／ 作者 ${s.author} ／ 出版社 ${s.publisher} ／ 発行情報 ${s.publishedDate} ／ ISBN ${s.isbn}</p>${msg?`<small>${esc(msg)}</small>`:''}`;
+ $('#libraryEnrichStatus').innerHTML=`<p><b>現在 ${s.total}冊</b> ／ 作者 ${s.author} ／ 絵 ${s.illustrator} ／ 訳 ${s.translator} ／ 出版社 ${s.publisher} ／ 発行情報 ${s.publishedDate} ／ ISBN ${s.isbn}</p>${msg?`<small>${esc(msg)}</small>`:''}`;
 }
 async function googleTitleMetadata(title,author=''){
  try{
@@ -341,7 +361,7 @@ async function mergeBundledMiete(){
  if(added){saveReadLog([...map.values()].sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time)));recalcReadCounts();save()}
  window._mieteBundle=j;if($('#mieteout'))$('#mieteout').innerHTML=`<p><b>保存済みミーテPDFを自動反映</b>：2026年2・3・4・5・6・7・8月／蔵書と照合できた ${j.events.length}件</p><small>歌・Baby Kumon活動は絵本回数と分離しています。</small>`;
 }
-function metaLine(b){let bits=[];if(b.author)bits.push('作者：'+esc(b.author));if(b.illustrator)bits.push('絵：'+esc(b.illustrator));if(b.publisher)bits.push('出版社：'+esc(b.publisher));if(b.publishedDate)bits.push('発売・初版：'+esc(b.publishedDate));if(b.isbn)bits.push('ISBN：'+esc(b.isbn));return bits.join(' ／ ')}
+function metaLine(b){let bits=[];if(b.author)bits.push('作者：'+esc(b.author));if(b.illustrator)bits.push('絵：'+esc(b.illustrator));if(b.translator)bits.push('訳・再話：'+esc(b.translator));if(b.publisher)bits.push('出版社：'+esc(b.publisher));if(b.publishedDate)bits.push('発売・初版：'+esc(b.publishedDate));if(b.isbn)bits.push('ISBN：'+esc(b.isbn));return bits.join(' ／ ')}
 function integratedSummary(){
  if(!$('#integratedStatus'))return;
  const logs=readLog(),total=logs.reduce((a,x)=>a+(+x.count||0),0),withMeta=books.filter(b=>b.author||b.publisher||b.publishedDate).length;
@@ -426,4 +446,4 @@ function classifyMieteTitle(title){
 }
 
 init().then(async()=>{await applyLibraryMetadata();await mergeBundledMiete();await syncOfficialKumon2026(false);render();renderAnalysis();renderMieteRank();integratedSummary();renderLibraryEnrichStatus();integratedSummary()});setTimeout(renderScanProgress,0);
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=31',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=32',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
