@@ -1,267 +1,102 @@
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];let books=[],targets=[],editId=null,session=null;const coll=new Intl.Collator("ja",{numeric:true}),norm=s=>(s||"").normalize("NFKC").toLowerCase().replace(/[\s　・･\-―ー]/g,""),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));function save(){localStorage.setItem("kb",JSON.stringify(books))}
-// 既存の蔵書データに不足しているISBNを補完
-const savedBooks = JSON.parse(localStorage.getItem('kb') || 'null');
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+let books=[],targets=[],editId=null,session=null,pendingMiete=[],pendingKumon=null;
+const coll=new Intl.Collator('ja',{numeric:true,sensitivity:'base'});
+const norm=s=>String(s||'').normalize('NFKC').toLowerCase().replace(/[\s　・･\-―ー!！?？。、,，:：;；「」『』（）()【】\[\]〈〉《》]/g,'');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const yen=v=>v==null||v===''?'未記録':`¥${Number(v).toLocaleString('ja-JP')}`;
+const save=()=>localStorage.setItem('kb',JSON.stringify(books));
+const readLog=()=>JSON.parse(localStorage.getItem('mieteLog')||'[]');
+const saveReadLog=a=>localStorage.setItem('mieteLog',JSON.stringify(a));
+const kumonMaster=()=>JSON.parse(localStorage.getItem('kumonMaster')||'{}');
+const saveKumon=o=>localStorage.setItem('kumonMaster',JSON.stringify(o));
+const birth=()=>localStorage.getItem('birthDate')||'2025-04-05';
 
-if (Array.isArray(savedBooks)) {
-  const moonBook = savedBooks.find(b => b.title === '14ひきのおつきみ');
-
-  if (moonBook && !moonBook.isbn) {
-    moonBook.isbn = '9784494006830';
-    localStorage.setItem('kb', JSON.stringify(savedBooks));
-  }
-const halloweenBook = savedBooks.find(
-  b => b.title === 'ハロウィンドキドキおばけの日 ますだゆうこ'
-);
-
-if (halloweenBook) {
-  halloweenBook.title = 'ハロウィンドキドキおばけの日！';
-  localStorage.setItem('kb', JSON.stringify(savedBooks));
+function migrate(){
+ const a=JSON.parse(localStorage.getItem('kb')||'null'); if(!Array.isArray(a))return;
+ const patches=[
+  {titles:['14ひきのおつきみ'],title:'14ひきのおつきみ',isbn:'9784494006830'},
+  {titles:['ハロウィンドキドキおばけの日 ますだゆうこ','ハロウィンドキドキおばけの日！','ハロウィンドキドキおばけの日'],title:'ハロウィンドキドキおばけの日！',isbn:'9784894236097',publisher:'文溪堂'}
+ ];
+ let changed=false;
+ for(const p of patches){const b=a.find(x=>p.titles.some(t=>norm(x.title)===norm(t)));if(b){for(const [k,v] of Object.entries(p)){if(k==='titles')continue;if(k==='title'||!b[k]){b[k]=v;changed=true}}}}
+ if(changed)localStorage.setItem('kb',JSON.stringify(a));
 }
+
+async function init(){
+ migrate(); books=JSON.parse(localStorage.getItem('kb')||'null')||await fetch('/initial_books.json',{cache:'no-store'}).then(r=>r.json());
+ $('#birthDate').value=birth(); recalcReadCounts(); render(); renderKumonYears(); renderAnalysis();
 }
-async function init(){books=JSON.parse(localStorage.getItem("kb")||"null")||await fetch("/initial_books.json").then(r=>r.json());render()}
-function cmp(a,b){let s=$("#sort").value;if(s==="author")return coll.compare(a.author||"ん",b.author||"ん");if(s==="publisher")return coll.compare(a.publisher||"ん",b.publisher||"ん");if(s==="priceAsc")return(a.usedMin??1e9)-(b.usedMin??1e9);if(s==="priceDesc")return(b.usedMax??-1)-(a.usedMax??-1);if(s==="mercariAsc")return(a.mercariPrice??1e9)-(b.mercariPrice??1e9);if(s==="rakumaAsc")return(a.rakumaPrice??1e9)-(b.rakumaPrice??1e9);if(s==="valuebooksAsc")return(a.valuebooksPrice??1e9)-(b.valuebooksPrice??1e9);if(s==="rarity")return"SABC".indexOf(a.rarity||"Z")-"SABC".indexOf(b.rarity||"Z");if(s==="priority")return"SABC".indexOf(a.priority||"Z")-"SABC".indexOf(b.priority||"Z");return coll.compare(a.title,b.title)}
-function bookTags(b){let a=[];if(b.kumonLevel)a.push("くもん"+b.kumonLevel);if(Array.isArray(b.genreTags))a.push(...b.genreTags);else if(b.genre)a.push(b.genre);return[...new Set(a.filter(Boolean))]}
-function render(){let q=norm($("#q").value),gf=$("#genreFilter")?.value||"",a=books.filter(b=>(!q||norm([b.title,b.author,b.publisher,b.isbn,...bookTags(b)].join(" ")).includes(q))&&(!gf||bookTags(b).some(t=>t===gf||t.includes(gf)))).sort(cmp);$("#stats").innerHTML=`<div class=stat><b>${books.length}</b><br>所有タイトル</div><div class=stat><b>${books.filter(b=>b.isbn).length}</b><br>ISBN登録</div><div class=stat><b>${books.reduce((n,b)=>n+(+b.readCount||0),0)}</b><br>読み聞かせ</div><div class=stat><b>${books.filter(b=>b.rarity==="S").length}</b><br>レアS</div>`;$("#list").innerHTML=a.map(b=>`<div class=book data-id="${b.id}"><div><b>${esc(b.title)}</b><div class=tags>${bookTags(b).map(t=>`<span class=tag>${esc(t)}</span>`).join("")}</div></div><div>${esc(b.author||"")}<br><small>作者</small></div><div>${esc(b.publisher||"")}<br><small>出版社</small></div><div>${b.usedMin!=null?`中古 ¥${b.usedMin}〜${b.usedMax??b.usedMin}`:"相場未設定"}<br><small>${b.mercariPrice!=null?`メルカリ ¥${b.mercariPrice}`:""} ${b.rakumaPrice!=null?`/ ラクマ ¥${b.rakumaPrice}`:""} ${b.valuebooksPrice!=null?`/ VB ¥${b.valuebooksPrice}`:""}</small></div><div>${b.rarity?`レア${b.rarity}`:""}<br>${b.priority?`優先${b.priority}`:""}</div></div>`).join("");$$(".book").forEach(x=>x.onclick=()=>openEdit(x.dataset.id));missing()}
-$$("nav button").forEach(b=>b.onclick=()=>{$$("nav button,.tab").forEach(x=>x.classList.remove("on"));b.classList.add("on");$("#"+b.dataset.tab).classList.add("on")});$("#q").oninput=render;$("#sort").onchange=render;$("#genreFilter").onchange=render;$("#pdf").onclick=()=>print();$("#add").onclick=()=>openEdit();$("#cancel").onclick=()=>$("#edit").close();
-function openEdit(id){editId=id||null;let b=books.find(x=>x.id===id)||{},f=$("#edit form");["title","author","publisher","isbn","usedMin","usedMax","mercariPrice","rakumaPrice","valuebooksPrice","rarity","priority","kumonLevel"].forEach(k=>f.elements[k].value=b[k]??"");f.elements.genreTagsText.value=(Array.isArray(b.genreTags)?b.genreTags:[b.genre].filter(Boolean)).join(",");$("#edit").showModal()}$("#edit form").onsubmit=e=>{e.preventDefault();let f=e.target,v=Object.fromEntries(new FormData(f)),b=books.find(x=>x.id===editId);if(!b){b={id:crypto.randomUUID(),owned:true,readCount:0};books.push(b)}Object.assign(b,v,{genreTags:v.genreTagsText.split(/[,、]/).map(x=>x.trim()).filter(Boolean),usedMin:v.usedMin===""?null:+v.usedMin,usedMax:v.usedMax===""?null:+v.usedMax,mercariPrice:v.mercariPrice===""?null:+v.mercariPrice,rakumaPrice:v.rakumaPrice===""?null:+v.rakumaPrice,valuebooksPrice:v.valuebooksPrice===""?null:+v.valuebooksPrice,marketCheckedAt:new Date().toISOString()});delete b.genreTagsText;save();$("#edit").close();render()}
-async function lookup(code){// スキャンした本を既存の所有本と照合し、ISBNを自動で紐付ける
-function linkScannedIsbn(info) {
-  if (!info?.isbn || !info?.title) return null;
-
-  // すでに同じISBNが登録されていれば、その本を返す
-  const isbnHit = books.find(
-    b => String(b.isbn || "") === String(info.isbn)
-  );
-
-  if (isbnHit) return isbnHit;
-
-  // タイトル比較専用の正規化
-  // 全角半角・空白・句読点・記号などの違いを吸収する
-  const normalizeTitle = s =>
-    String(s || "")
-      .normalize("NFKC")
-      .toLowerCase()
-      .replace(/[\s　・･\-―ー!！?？。、,，:：;；「」『』（）()【】\[\]]/g, "");
-
-  const scannedTitle = normalizeTitle(info.title);
-
-  // ISBNがまだ入っていない所有本から、
-  // 正規化後のタイトルが完全一致するものだけを探す
-  const candidates = books.filter(b =>
-    b.owned === true &&
-    !b.isbn &&
-    normalizeTitle(b.title) === scannedTitle
-  );
-
-  // 1冊だけ一致した場合のみ自動登録
-  // 複数候補がある場合は誤登録防止のため何もしない
-  if (candidates.length !== 1) {
-    return null;
-  }
-
-  const book = candidates[0];
-
-  // ISBNを既存本へ追加
-  book.isbn = info.isbn;
-
-  // 空欄の書誌情報だけ補完
-  if (!book.author && info.author) {
-    book.author = info.author;
-  }
-
-  if (!book.publisher && info.publisher) {
-    book.publisher = info.publisher;
-  }
-
-  // スキャンで確認できた日時も残す
-  book.isbnCheckedAt = new Date().toISOString();
-
-  save();
-
-  return book;
-}code=(code||"").replace(/\D/g,"");if(code.length!==13)throw Error("13桁で入力してください");let hit=books.find(b=>b.isbn===code),j=await fetch(`https://api.openbd.jp/v1/get?isbn=${code}`).then(r=>r.json()),s=j?.[0]?.summary||{};return{hit,info:{isbn:code,title:s.title||hit?.title||"",author:s.author||hit?.author||"",publisher:s.publisher||hit?.publisher||""}}}
-function marketLinks(info){let term=encodeURIComponent([info.title,info.author].filter(Boolean).join(" "));return{
-mercari:`https://jp.mercari.com/search?keyword=${term}`,
-rakuma:`https://fril.jp/s?query=${term}`,
-valuebooks:`https://search.rakuten.co.jp/search/mall/${term}%20VALUE%20BOOKS/`
-}}
-function yen(v){return v==null||v===""?"未記録":`¥${Number(v).toLocaleString("ja-JP")}`}
-function priceDecision(hit,storePrice,maxPrice){
- let pairs=[
-  ["BOOKOFF",storePrice],
-  ["メルカリ",hit?.mercariPrice],
-  ["ラクマ",hit?.rakumaPrice],
-  ["VALUE BOOKS",hit?.valuebooksPrice]
- ].filter(x=>x[1]!=null&&x[1]!==""&&!Number.isNaN(+x[1])).map(x=>[x[0],+x[1]]);
- if(!pairs.length)return{cls:"unknown",text:"比較価格がまだありません",cheapest:""};
- pairs.sort((a,b)=>a[1]-b[1]);
- let cheapest=`最安記録：${pairs[0][0]} ${yen(pairs[0][1])}`;
- if(storePrice!=null&&storePrice!==""&&maxPrice!=null&&maxPrice!==""){
-   return +storePrice<=+maxPrice?{cls:"buy",text:`設定上限 ${yen(maxPrice)} 以下 → 購入候補`,cheapest}:{cls:"wait",text:`設定上限 ${yen(maxPrice)} を超過 → 見送り候補`,cheapest};
- }
- if(storePrice!=null&&storePrice!==""&&pairs[0][0]==="BOOKOFF")return{cls:"buy",text:"登録済み比較価格の中ではBOOKOFFが最安",cheapest};
- return{cls:"unknown",text:"上限金額を入れると購入判定できます",cheapest};
+function bookTags(b){let a=[];if(b.kumonLevel)a.push('くもん'+b.kumonLevel);if(Array.isArray(b.genreTags))a.push(...b.genreTags);else if(b.genre)a.push(b.genre);return[...new Set(a.filter(Boolean))]}
+function cmp(a,b){let s=$('#sort').value;if(s==='author')return coll.compare(a.author||'ん',b.author||'ん');if(s==='publisher')return coll.compare(a.publisher||'ん',b.publisher||'ん');if(s==='readDesc')return(b.readCount||0)-(a.readCount||0);if(s==='priceAsc')return(a.usedMin??1e9)-(b.usedMin??1e9);if(s==='rarity')return'SABC'.indexOf(a.rarity||'Z')-'SABC'.indexOf(b.rarity||'Z');if(s==='priority')return'SABC'.indexOf(a.priority||'Z')-'SABC'.indexOf(b.priority||'Z');return coll.compare(a.title,b.title)}
+function render(){
+ let q=norm($('#q').value),gf=$('#genreFilter').value,a=books.filter(b=>(!q||norm([b.title,b.author,b.publisher,b.isbn,...bookTags(b)].join(' ')).includes(q))&&(!gf||bookTags(b).some(t=>t===gf||t.includes(gf)))).sort(cmp);
+ $('#stats').innerHTML=`<div class=stat><b>${books.length}</b><br><small>蔵書</small></div><div class=stat><b>${books.filter(b=>b.isbn).length}</b><br><small>ISBN登録</small></div><div class=stat><b>${books.filter(b=>b.noCode).length}</b><br><small>コードなし確認済</small></div><div class=stat><b>${readLog().reduce((s,x)=>s+(+x.count||0),0)}</b><br><small>読み聞かせ</small></div>`;
+ $('#list').innerHTML=a.map(b=>`<div class=book data-id="${b.id}"><div><b>${esc(b.title)}</b><div>${bookTags(b).map(t=>`<span class=tag>${esc(t)}</span>`).join('')}</div><small>${b.readCount||0}回${b.isbn?' ／ '+esc(b.isbn):''}</small></div><div>${esc(b.author||'')}<br><small>作者</small></div><div>${esc(b.publisher||'')}<br><small>${esc(b.publishedDate||'発売日未登録')}</small></div><div>${b.listPrice?`定価 ${yen(b.listPrice)}`:''}<br><small>${b.usedMin!=null?`中古 ${yen(b.usedMin)}〜${yen(b.usedMax??b.usedMin)}`:'相場未設定'}</small></div></div>`).join('');
+ $$('.book[data-id]').forEach(x=>x.onclick=()=>openEdit(x.dataset.id)); missing();
 }
-async function findBook(code){
- try{
-  let{hit,info}=await lookup(code),links=marketLinks(info);
-  if (!hit) {
-  hit = linkScannedIsbn(info);
-　}
-  let storePrice=$("#storePrice").value===""?null:+$("#storePrice").value;
-  let maxPrice=$("#maxPrice").value===""?null:+$("#maxPrice").value;
-  let d=priceDecision(hit,storePrice,maxPrice);
-  let ceiling=maxPrice!=null?`&nbsp;／&nbsp;検索上限 <b>${yen(maxPrice)}</b>`:"";
-  $("#scanout").innerHTML=`<div class=result><h3>${esc(info.title||"書誌情報なし")}</h3><b>${hit?"✅ 所有済み":"🟢 未所有"}</b>
-  <p>${esc(info.author)}<br>${esc(info.publisher)}<br>${esc(info.isbn)}</p>
-  <p>BOOKOFF店頭価格：<b>${yen(storePrice)}</b>${ceiling}</p>
-  <div class="decision ${d.cls}">${d.text}<br><small>${d.cheapest}</small></div>
-  <div class=market-grid>
-  <div class="market-card">
-  <b>メルカリ</b>
-  <small>目立った傷や汚れなし以上</small>
-  <p>${yen(hit?.mercariPrice)}</p>
-  <a target="_blank" rel="noopener" href="${links.mercari}">メルカリで検索</a>
-  ${hit ? `<button type="button" onclick="saveMarketPrice('${code}','mercariPrice')">価格を記録</button>` : ""}
-</div>
+$$('nav button').forEach(b=>b.onclick=()=>{$$('nav button,.tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('#'+b.dataset.tab).classList.add('on');if(b.dataset.tab==='analysis')renderAnalysis()});
+$('#q').oninput=render;$('#sort').onchange=render;$('#genreFilter').onchange=render;$('#pdf').onclick=()=>print();$('#add').onclick=()=>openEdit();$('#cancel').onclick=()=>$('#edit').close();
+function openEdit(id){editId=id||null;let b=books.find(x=>x.id===id)||{},f=$('#edit form');['title','author','publisher','isbn','publishedDate','listPrice','usedMin','usedMax','mercariPrice','rakumaPrice','valuebooksPrice','rarity','priority','kumonLevel'].forEach(k=>f.elements[k].value=b[k]??'');f.elements.noCode.checked=!!b.noCode;f.elements.genreTagsText.value=(Array.isArray(b.genreTags)?b.genreTags:[b.genre].filter(Boolean)).join(',');$('#edit').showModal()}
+$('#edit form').onsubmit=e=>{e.preventDefault();let f=e.target,v=Object.fromEntries(new FormData(f)),b=books.find(x=>x.id===editId);if(!b){b={id:crypto.randomUUID(),owned:true,readCount:0};books.push(b)}Object.assign(b,v,{noCode:f.elements.noCode.checked,genreTags:v.genreTagsText.split(/[,、]/).map(x=>x.trim()).filter(Boolean),listPrice:v.listPrice===''?null:+v.listPrice,usedMin:v.usedMin===''?null:+v.usedMin,usedMax:v.usedMax===''?null:+v.usedMax,mercariPrice:v.mercariPrice===''?null:+v.mercariPrice,rakumaPrice:v.rakumaPrice===''?null:+v.rakumaPrice,valuebooksPrice:v.valuebooksPrice===''?null:+v.valuebooksPrice});delete b.genreTagsText;if(b.noCode&&!b.codeStatus)b.codeStatus='no-code-confirmed';save();$('#edit').close();render();renderScanProgress()};
 
-<div class="market-card">
-  <b>ラクマ</b>
-  <small>目立った傷や汚れなし以上</small>
-  <p>${yen(hit?.rakumaPrice)}</p>
-  <a target="_blank" rel="noopener" href="${links.rakuma}">ラクマで検索</a>
-  ${hit ? `<button type="button" onclick="saveMarketPrice('${code}','rakumaPrice')">価格を記録</button>` : ""}
-</div>
+function deepValues(obj,key,out=[]){if(!obj||typeof obj!=='object')return out;for(const [k,v] of Object.entries(obj)){if(k.toLowerCase()===key.toLowerCase())out.push(v);if(v&&typeof v==='object')deepValues(v,key,out)}return out}
+function firstScalar(vals){for(const v of vals.flat(Infinity)){if(v==null)continue;if(typeof v==='string'||typeof v==='number')return String(v);if(typeof v==='object'){for(const k of ['Date','PriceAmount','Amount','value','Value'])if(v[k]!=null)return String(v[k])}}return''}
+function isbn13Valid(raw){let code=String(raw||'').replace(/[^0-9Xx]/g,'');if(!/^97[89]\d{10}$/.test(code))return false;let sum=0;for(let i=0;i<12;i++)sum+=(+code[i])*(i%2?3:1);return (10-(sum%10))%10===+code[12]}
+function isbn10To13(raw){let x=String(raw||'').replace(/[^0-9Xx]/g,'').toUpperCase();if(!/^\d{9}[\dX]$/.test(x))return'';let sum=0;for(let i=0;i<10;i++)sum+=(10-i)*(x[i]==='X'?10:+x[i]);if(sum%11)return'';let base='978'+x.slice(0,9),s=0;for(let i=0;i<12;i++)s+=(+base[i])*(i%2?3:1);return base+((10-s%10)%10)}
+function normalizeIsbn(raw){let x=String(raw||'').replace(/[^0-9Xx]/g,'');if(x.length===10)x=isbn10To13(x);if(!isbn13Valid(x))throw Error('有効なISBN-13（978/979）を入力してください。補助価格コードや一般JANは書籍ISBNとして登録しません。');return x}
+function parseOpenBD(j,code,hit){let d=j?.[0]||{},s=d.summary||{},onix=d.onix||{};let date=firstScalar(deepValues(onix,'PublishingDate'))||s.pubdate||'';if(/^\d{8}$/.test(date))date=`${date.slice(0,4)}-${date.slice(4,6)}-${date.slice(6,8)}`;let prices=deepValues(onix,'Price'),amount='';for(const p of prices.flat()){if(p&&typeof p==='object'){amount=p.PriceAmount||p.Amount||amount;if(amount)break}}let price=amount?Number(String(amount).replace(/\D/g,'')):null;let related=[...new Set(deepValues(d,'kanrenshoisbn').flat(Infinity).map(String).filter(x=>/^97[89]\d{10}$/.test(x)))];return{isbn:code,title:s.title||hit?.title||'',author:s.author||hit?.author||'',publisher:s.publisher||hit?.publisher||'',publishedDate:date||hit?.publishedDate||'',listPrice:price||hit?.listPrice||null,cover:s.cover||'',relatedIsbns:related,language:hit?.language||'',metadataSource:s.title?'openBD':''}}
+async function googleBooksLookup(code){try{let r=await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(code)}&maxResults=5&printType=books`);if(!r.ok)return null;let j=await r.json(),items=j.items||[];let item=items.find(x=>(x.volumeInfo?.industryIdentifiers||[]).some(i=>String(i.identifier||'').replace(/\D/g,'')===code))||items[0];if(!item)return null;let v=item.volumeInfo||{},sale=item.saleInfo||{},ids=v.industryIdentifiers||[];return{isbn:code,title:v.title||'',author:(v.authors||[]).join(' / '),publisher:v.publisher||'',publishedDate:v.publishedDate||'',listPrice:sale.listPrice?.amount??null,cover:v.imageLinks?.thumbnail||'',relatedIsbns:ids.map(i=>String(i.identifier||'').replace(/\D/g,'')).filter(x=>/^97[89]\d{10}$/.test(x)&&x!==code),language:v.language||'',metadataSource:'Google Books'}}catch(e){return null}}
+async function lookup(code){code=normalizeIsbn(code);let hit=books.find(b=>String(b.isbn||'')===code),info={isbn:code,title:hit?.title||'',author:hit?.author||'',publisher:hit?.publisher||'',publishedDate:hit?.publishedDate||'',listPrice:hit?.listPrice||null,language:hit?.language||'',relatedIsbns:[]};try{let j=await fetch(`https://api.openbd.jp/v1/get?isbn=${code}`).then(r=>r.json());info=parseOpenBD(j,code,hit)}catch(e){}if(!info.title){let g=await googleBooksLookup(code);if(g)info={...info,...g}}else if(!info.author||!info.publisher||!info.publishedDate){let g=await googleBooksLookup(code);if(g)info={...g,...info,author:info.author||g.author,publisher:info.publisher||g.publisher,publishedDate:info.publishedDate||g.publishedDate,language:info.language||g.language,listPrice:info.listPrice||g.listPrice}}return{hit,info}}
+function linkScannedIsbn(info){if(!info?.isbn||!info?.title)return null;let exact=books.find(b=>String(b.isbn||'')===String(info.isbn));if(exact)return exact;let b=safeCandidate(info);if(!b)return null;return enrichOwnedBook(b,info)}
+function marketLinks(info){let term=encodeURIComponent([info.title,info.author].filter(Boolean).join(' ')),latest=encodeURIComponent([info.title,info.publisher,'新版 最新版'].filter(Boolean).join(' '));return{mercari:`https://jp.mercari.com/search?keyword=${term}`,rakuma:`https://fril.jp/s?query=${term}`,valuebooks:`https://search.rakuten.co.jp/search/mall/${term}%20VALUE%20BOOKS/`,rakutenNew:`https://search.rakuten.co.jp/search/mall/${latest}/`,amazonNew:`https://www.amazon.co.jp/s?k=${latest}`,googleNew:`https://www.google.com/search?q=${latest}`}}
+function priceDecision(hit,store,max){let pairs=[['BOOKOFF',store],['メルカリ',hit?.mercariPrice],['ラクマ',hit?.rakumaPrice],['VALUE BOOKS',hit?.valuebooksPrice]].filter(x=>x[1]!=null&&x[1]!==''&&!Number.isNaN(+x[1])).map(x=>[x[0],+x[1]]);if(!pairs.length)return{cls:'unknown',text:'比較価格がまだありません',cheapest:''};pairs.sort((a,b)=>a[1]-b[1]);let cheapest=`最安記録：${pairs[0][0]} ${yen(pairs[0][1])}`;if(store!=null&&max!=null)return +store<=+max?{cls:'buy',text:`設定上限 ${yen(max)} 以下 → 購入候補`,cheapest}:{cls:'wait',text:`設定上限 ${yen(max)} を超過`,cheapest};return{cls:'unknown',text:'価格を比較できます',cheapest}}
+function renderScanProgress(){let isbn=books.filter(b=>b.isbn).length,no=books.filter(b=>b.noCode).length,pending=books.filter(b=>!b.isbn&&!b.noCode).length;let el=$('#scanProgress');if(el)el.innerHTML=`<b>${books.length}冊中 ${isbn}冊 ISBN登録済</b> ／ ${no}冊 コードなし確認済 ／ <b>${pending}冊 未確認</b>`}
+function safeCandidate(info){let title=norm(info.title),author=norm(info.author),publisher=norm(info.publisher);let c=books.filter(b=>b.owned===true&&!b.isbn&&!b.noCode&&norm(b.title)===title);if(c.length===1)return c[0];let scored=books.filter(b=>b.owned===true&&!b.isbn&&!b.noCode).map(b=>{let score=0;if(title&&norm(b.title)===title)score+=6;if(author&&norm(b.author)&&author.includes(norm(b.author)))score+=2;if(publisher&&norm(b.publisher)===publisher)score+=2;return{b,score}}).filter(x=>x.score>=8).sort((a,b)=>b.score-a.score);return scored.length===1?scored[0].b:null}
+function enrichOwnedBook(b,info){if(!b||!info)return b;b.isbn=info.isbn||b.isbn;b.title=info.title||b.title;b.author=info.author||b.author;b.publisher=info.publisher||b.publisher;b.publishedDate=info.publishedDate||b.publishedDate;b.listPrice=info.listPrice||b.listPrice;b.codeStatus='isbn-verified';b.isbnCheckedAt=new Date().toISOString();save();return b}
+async function findBook(code){try{let{hit,info}=await lookup(code);if(!hit)hit=linkScannedIsbn(info);if(hit){for(const k of ['author','publisher','publishedDate','listPrice'])if(!hit[k]&&info[k])hit[k]=info[k];save()}let links=marketLinks(info),store=$('#storePrice').value===''?null:+$('#storePrice').value,max=$('#maxPrice').value===''?null:+$('#maxPrice').value,d=priceDecision(hit,store,max),pct=store!=null&&info.listPrice?Math.round(store/info.listPrice*100):null;$('#scanout').innerHTML=`<div class=result><h3>${esc(info.title||'書誌情報なし')}</h3><b>${hit?'✅ 所有済み':'🟢 未所有'}</b><p>${esc(info.author)}<br>${esc(info.publisher)}<br>発売日：${esc(info.publishedDate||'不明')}<br>ISBN：${esc(info.isbn)}<br>定価（税込）：<b>${yen(info.listPrice)}</b></p>${store!=null?`<p>BOOKOFF：<b>${yen(store)}</b>${pct!=null?` ／ 定価の約${pct}% ／ 差額${yen(info.listPrice-store)}`:''}</p>`:''}<div class="decision ${d.cls}">${d.text}<br><small>${d.cheapest}</small></div><div class=market-grid>${[['メルカリ','mercari','mercariPrice'],['ラクマ','rakuma','rakumaPrice'],['VALUE BOOKS','valuebooks','valuebooksPrice']].map(([n,l,k])=>`<div class=market-card><b>${n}</b><p>${yen(hit?.[k])}</p><a target=_blank rel=noopener href="${links[l]}">検索</a>${hit?`<button onclick="saveMarketPrice('${code}','${k}')">価格を記録</button>`:''}</div>`).join('')}</div><div class=panel><b>🔄 新版・最新版の確認</b><p class=muted>図鑑・辞典などは改訂版がある場合があります。関連ISBNが取得できた場合は候補を表示し、それ以外は最新版検索リンクを表示します。</p>${info.relatedIsbns?.length?`<p>関連ISBN候補：${info.relatedIsbns.map(esc).join(' / ')}</p>`:''}<p><a target=_blank href="${links.rakutenNew}">楽天で最新版候補</a>　<a target=_blank href="${links.amazonNew}">Amazonで最新版候補</a>　<a target=_blank href="${links.googleNew}">Webで出版社情報を確認</a></p></div>${!hit?'<button id=reg>この本を蔵書登録</button>':'<button id=editmarket>本の情報を編集</button>'}</div>`;if(!hit)$('#reg').onclick=()=>{books.push({...info,id:crypto.randomUUID(),owned:true,readCount:0,usedMin:null,usedMax:null,genreTags:[],kumonLevel:''});save();render();findBook(code)};else{$('#editmarket').onclick=()=>openEdit(hit.id);if(store!=null){hit.purchasePrice=store;save()}}renderScanProgress();if($('#bulkMode')?.checked)setTimeout(()=>startScanner(),650)}catch(e){$('#scanout').textContent=e.message;if($('#bulkMode')?.checked)setTimeout(()=>startScanner(),900)}}
+window.saveMarketPrice=(isbn,market)=>{let b=books.find(x=>x.isbn===isbn);if(!b)return alert('この本はまだ蔵書に登録されていません。');let v=prompt('価格を入力してください（円）',b[market]??'');if(v===null)return;let p=v.replace(/[^\d]/g,'');b[market]=p?+p:null;b.marketCheckedAt=new Date().toISOString();save();findBook(isbn)};
+$('#lookup').onclick=()=>findBook($('#isbn').value);$('#storePrice').onchange=()=>$('#isbn').value&&findBook($('#isbn').value);$('#maxPrice').onchange=()=>$('#isbn').value&&findBook($('#isbn').value);
+let zxingControls=null,scanBusy=false;
+async function startScanner(){if(scanBusy||zxingControls)return;if(!window.ZXingBrowser)return alert('バーコード読取機能を読み込めませんでした。');try{scanBusy=true;let reader=new ZXingBrowser.BrowserMultiFormatReader();zxingControls=await reader.decodeFromVideoDevice(undefined,$('#video'),async(result,error,controls)=>{if(!result)return;let raw=result.getText(),code=String(raw||'').replace(/\D/g,'');if(!isbn13Valid(code))return;controls.stop();zxingControls=null;scanBusy=false;$('#isbn').value=code;await findBook(code)})}catch(e){scanBusy=false;zxingControls=null;alert('カメラを開始できませんでした。カメラ許可を確認してください。')}}
+$('#camera').onclick=startScanner;
+$('#stopCamera').onclick=()=>{if(zxingControls)zxingControls.stop();zxingControls=null;scanBusy=false};
+$('#bulkMode').onchange=()=>{renderScanProgress();if($('#bulkMode').checked)startScanner()};
+$('#showNoIsbn').onclick=()=>{let a=books.filter(b=>!b.isbn&&!b.noCode).sort(cmp);$('#scanout').innerHTML=`<div class=panel><h3>ISBN未登録・未確認 ${a.length}冊</h3>${a.map(b=>`<div class=book data-manual="${b.id}"><b>${esc(b.title)}</b><span>${esc(b.author||'')}</span><span>${esc(b.publisher||'')}</span><button>手入力</button></div>`).join('')}</div>`;$$('[data-manual]').forEach(x=>x.onclick=()=>openEdit(x.dataset.manual))};
+$('#manualNoCode').onclick=()=>{openEdit();let f=$('#edit form');f.elements.noCode.checked=true};
+$('#target').onchange=async e=>{let f=e.target.files[0];if(!f)return;let t=await f.text();targets=f.name.endsWith('.json')?JSON.parse(t):t.split(/\r?\n/).slice(1).filter(Boolean).map(l=>{let[title,author,publisher,isbn,priority,rarity,usedMin,usedMax]=l.split(',');return{title,author,publisher,isbn,priority,rarity,usedMin:+usedMin||null,usedMax:+usedMax||null}});missing()};
+function missing(){if(!targets.length)return $('#miss').innerHTML='';let a=targets.filter(t=>!books.some(b=>(t.isbn&&b.isbn===t.isbn)||norm(b.title)===norm(t.title))).sort((a,b)=>coll.compare(a.title,b.title));$('#miss').innerHTML=`<p><b>${a.length}</b>冊 未所有</p>`+a.map(x=>`<div class=book><b>${esc(x.title)}</b><span>${esc(x.author||'')}</span><span>${esc(x.publisher||'')}</span><span>${x.usedMin?yen(x.usedMin):''}</span></div>`).join('')}
 
-<div class="market-card">
-  <b>VALUE BOOKS</b>
-  <small>「良い」以上</small>
-  <p>${yen(hit?.valuebooksPrice)}</p>
-  <a target="_blank" rel="noopener" href="${links.valuebooks}">楽天で検索</a>
-  ${hit ? `<button type="button" onclick="saveMarketPrice('${code}','valuebooksPrice')">価格を記録</button>` : ""}
-</div>
-  <p><small>※検索上限金額はアプリ内の購入判定条件です。外部サイト側の検索結果をその金額以下に自動絞り込みできない場合があります。</small></p>
-  ${hit?`<button id=editmarket>比較価格を入力・更新</button>`:`<button id=reg>所有本に登録</button>`}</div>`;
-  if(!hit)$("#reg").onclick=()=>{
-    books.push({...info,id:crypto.randomUUID(),owned:true,readCount:0,usedMin:null,usedMax:null,mercariPrice:null,rakumaPrice:null,valuebooksPrice:null,rarity:"",priority:"",genreTags:[],kumonLevel:"",purchasePrice:storePrice});
-    save();render();findBook(code)
-  };
-  else{
-    if(storePrice!=null){hit.purchasePrice=storePrice;save()}
-    $("#editmarket").onclick=()=>openEdit(hit.id)
-  }
- }catch(e){$("#scanout").textContent=e.message}
-}// 中古価格を簡単に記録する
-window.saveMarketPrice = function(isbn, market) {
-  const book = books.find(b => b.isbn === isbn);
+async function pdfText(file){let pdfjs=await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs');pdfjs.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';let data=await file.arrayBuffer(),pdf=await pdfjs.getDocument({data}).promise,pages=[];for(let p=1;p<=pdf.numPages;p++){let page=await pdf.getPage(p),tc=await page.getTextContent(),rows=new Map();for(const it of tc.items){let y=Math.round(it.transform?.[5]||0);if(!rows.has(y))rows.set(y,[]);rows.get(y).push({x:it.transform?.[4]||0,s:it.str})}let lines=[...rows.entries()].sort((a,b)=>b[0]-a[0]).map(([,items])=>items.sort((a,b)=>a.x-b.x).map(i=>i.s).join(' ').trim()).filter(Boolean);pages.push(lines.join('\n'))}return pages.join('\n')}
+function ageAt(date){let d=new Date(date+'T12:00:00'),b=new Date(birth()+'T12:00:00');let m=(d.getFullYear()-b.getFullYear())*12+d.getMonth()-b.getMonth();if(d.getDate()<b.getDate())m--;return{months:m,label:`${Math.floor(m/12)}歳${m%12}か月`}}
+function parseMiete(text,fileName){let chunks=text.split(/(?=20\d{2}年\d{1,2}月\d{1,2}日)/),out=[];for(const ch of chunks){let dm=ch.match(/(20\d{2})年(\d{1,2})月(\d{1,2})日/);if(!dm)continue;let date=`${dm[1]}-${String(dm[2]).padStart(2,'0')}-${String(dm[3]).padStart(2,'0')}`;let re=/(\d{1,2}:\d{2})\s+([\s\S]*?)\s+(\d+)回(?=\s|20\d{2}年|$)/g,m;while((m=re.exec(ch))){let raw=m[2].replace(/\s+/g,' ').trim();let title=raw.replace(/\s*[\(（【].*$/,'').trim();let known=bestBookMatch(title,raw);if(!known)continue;let count=+m[3]||1;out.push({id:`${date}|${m[1]}|${norm(known.title)}|${count}`,date,time:m[1],title:known.title,bookId:known.id,count,source:fileName,ageMonths:ageAt(date).months})}}return out}
+function bestBookMatch(title,raw){let n=norm(title),nr=norm(raw);let exact=books.find(b=>norm(b.title)===n);if(exact)return exact;let c=books.filter(b=>{let x=norm(b.title);return x.length>=3&&(nr.includes(x)||x.includes(n))}).sort((a,b)=>norm(b.title).length-norm(a.title).length);return c[0]||null}
+$('#mietefile').onchange=e=>{pendingMiete=[...e.target.files];$('#mieteout').textContent=`${pendingMiete.length}ファイル選択済み`};
+$('#importMiete').onclick=async()=>{if(!pendingMiete.length)return alert('ミーテPDFを選択してください');$('#mieteout').textContent='解析中…';let parsed=[];for(const f of pendingMiete){let t=await pdfText(f);parsed.push(...parseMiete(t,f.name))}let old=readLog(),map=new Map(old.map(x=>[x.id,x]));let before=map.size;parsed.forEach(x=>map.set(x.id,x));let all=[...map.values()].sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));saveReadLog(all);recalcReadCounts();save();render();renderAnalysis();$('#mieteout').innerHTML=`<p><b>${parsed.length}</b>件をPDFから認識。新規 <b>${map.size-before}</b>件を保存しました。累計 <b>${all.reduce((s,x)=>s+x.count,0)}</b>回。</p>`;renderMieteRank()};
+function recalcReadCounts(){let sums={};for(const x of readLog())sums[x.bookId]=(sums[x.bookId]||0)+(+x.count||0);for(const b of books)b.readCount=sums[b.id]||b.readCount||0}
+function renderMieteRank(){let a=aggregateRanking(readLog());$('#mieterank').innerHTML='<h3>全期間ランキング</h3>'+rankHtml(a.slice(0,20))}
+function aggregateRanking(log){let m=new Map();for(const x of log){let k=x.bookId||x.title,o=m.get(k)||{title:x.title,count:0};o.count+=+x.count||0;m.set(k,o)}return[...m.values()].sort((a,b)=>b.count-a.count)}
+function rankHtml(a){return a.length?a.map((x,i)=>`<div class=rank><b>${i+1}位</b><span>${esc(x.title)}</span><b>${x.count}回</b></div>`).join(''):'<p class=muted>該当する記録がありません。</p>'}
 
-  if (!book) {
-    alert("この本はまだ蔵書に登録されていません。");
-    return;
-  }
+function parseKumon(text,year){let levels=['5A','4A','3A','2A','A','B','C','D','E','F','G','H','I'],entries=[],current='';for(let line of text.split(/\n+/).map(x=>x.trim()).filter(Boolean)){let lm=line.match(/(?:^|\s)(5A|4A|3A|2A|A|B|C|D|E|F|G|H|I)(?:\s|$)/);if(lm&&line.length<40){current=lm[1];continue}if(!current)continue;let clean=line.replace(/^\d+[\.．\s]*/,'').trim();if(clean.length<2||/推薦図書|くもん|KUMON|一覧|年度/.test(clean))continue;let title=clean.split(/\s{2,}|　{2,}/)[0].trim();if(title.length>=2&&title.length<=80)entries.push({title,level:current,year})}let uniq=new Map();entries.forEach(x=>uniq.set(`${x.level}|${norm(x.title)}`,x));return[...uniq.values()]}
+function diffKumon(year,newList){let master=kumonMaster(),prevYear=Math.max(...Object.keys(master).map(Number).filter(y=>y<year),0),prev=master[prevYear]||[],pm=new Map(prev.map(x=>[norm(x.title),x])),nm=new Map(newList.map(x=>[norm(x.title),x])),added=[],deleted=[],changed=[];for(const [k,x] of nm){if(!pm.has(k))added.push(x);else if(pm.get(k).level!==x.level)changed.push({title:x.title,from:pm.get(k).level,to:x.level})}for(const [k,x] of pm)if(!nm.has(k))deleted.push(x);return{prevYear,added,deleted,changed}}
+$('#importKumon').onclick=async()=>{let f=$('#kumonPdf').files[0],year=+$('#kumonImportYear').value;if(!f||!year)return alert('PDFと年度を指定してください');$('#kumonDiff').textContent='解析中…';let text=await pdfText(f),list=parseKumon(text,year);if(!list.length){$('#kumonDiff').innerHTML='<p>級とタイトルを十分に抽出できませんでした。PDFのレイアウト確認が必要です。既存データは変更していません。</p>';return}let diff=diffKumon(year,list);pendingKumon={year,list,diff};$('#kumonDiff').innerHTML=`<p><b>${year}年度 ${list.length}冊</b>を抽出</p><p class=diff-add>追加 ${diff.added.length}冊</p><p class=diff-del>削除 ${diff.deleted.length}冊</p><p class=diff-change>級変更 ${diff.changed.length}冊</p><button id=confirmKumon>この内容で年度マスターを保存</button>`;$('#confirmKumon').onclick=confirmKumonImport};
+function confirmKumonImport(){let{year,list,diff}=pendingKumon,master=kumonMaster();master[year]=list.map(x=>({...x,comment:diff.added.some(a=>norm(a.title)===norm(x.title))?`${year}年追加`:''}));if(diff.prevYear&&master[diff.prevYear])for(const d of diff.deleted){let old=master[diff.prevYear].find(x=>norm(x.title)===norm(d.title));if(old)old.removedComment=`${year}年削除`}for(const c of diff.changed){let x=master[year].find(z=>norm(z.title)===norm(c.title));if(x)x.comment=`${year}年 ${c.from}→${c.to}変更`}saveKumon(master);for(const x of master[year]){let b=books.find(z=>norm(z.title)===norm(x.title));if(b)b.kumonLevel=x.level}save();render();renderKumonYears();$('#kumonDiff').innerHTML+=`<p><b>保存しました。</b> 「${year}年追加／削除／級変更」の履歴を保持しています。</p>`}
+function renderKumonYears(){let years=Object.keys(kumonMaster()).sort((a,b)=>b-a);$('#kumonYear').innerHTML=(years.length?years:['2026']).map(y=>`<option>${y}</option>`).join('')}
+$('#showKumonMissing').onclick=()=>{let year=$('#kumonYear').value,lv=$('#kumonLevelFilter').value,list=kumonMaster()[year]||[],a=list.filter(x=>(!lv||x.level===lv)&&!books.some(b=>norm(b.title)===norm(x.title)));$('#miss').innerHTML=`<h3>${year}年度 ${lv||'全級'}：未所有 ${a.length}冊</h3>`+a.map(x=>`<div class=book><b>${esc(x.title)}</b><span class=tag>くもん${esc(x.level)}</span><span>${esc(x.comment||'')}</span><span></span></div>`).join('')};
 
-  const names = {
-    mercariPrice: "メルカリ",
-    rakumaPrice: "ラクマ",
-    valuebooksPrice: "VALUE BOOKS"
-  };
+function ageOptions(){let logs=readLog(),vals=[...new Set(logs.map(x=>x.ageMonths).filter(x=>x>=0))].sort((a,b)=>a-b);$('#ageFilter').innerHTML='<option value="all">全期間</option>'+vals.map(m=>`<option value="${m}">${Math.floor(m/12)}歳${m%12}か月</option>`).join('')}
+function genreOf(b){let t=bookTags(b).filter(x=>!x.startsWith('くもん'));return t[0]||'未分類'}
+function barHtml(data){let arr=Object.entries(data).sort((a,b)=>b[1]-a[1]),max=Math.max(...arr.map(x=>x[1]),1),sum=arr.reduce((s,x)=>s+x[1],0)||1;return arr.map(([k,v])=>`<div class=barrow><span>${esc(k)}</span><div class=bar><i style="width:${Math.max(2,v/max*100)}%"></i></div><b>${Math.round(v/sum*100)}%</b></div>`).join('')}
+function renderAnalysis(){ageOptions();let v=$('#ageFilter').value||'all',logs=readLog().filter(x=>v==='all'||String(x.ageMonths)===v);$('#ranking').innerHTML=`<h3>${v==='all'?'全期間':ageAtLabel(+v)} よく読んだ本</h3>`+rankHtml(aggregateRanking(logs).slice(0,20));let stock={},reads={};for(const b of books){let g=genreOf(b);stock[g]=(stock[g]||0)+1}for(const x of logs){let b=books.find(z=>z.id===x.bookId),g=b?genreOf(b):'未分類';reads[g]=(reads[g]||0)+(+x.count||0)}$('#genreChart').innerHTML=barHtml(stock);$('#readGenreChart').innerHTML=barHtml(reads);let sorted=Object.entries(stock).filter(([k])=>k!=='未分類').sort((a,b)=>a[1]-b[1]).slice(0,3);$('#genreAdvice').innerHTML=sorted.length?`<div class=panel><b>蔵書数が少ないジャンル</b><p>${sorted.map(([k,v])=>`${esc(k)} ${v}冊`).join(' ／ ')}</p><small>不足と断定するものではなく、追加購入を検討するときの参考表示です。</small></div>`:''}
+function ageAtLabel(m){return`${Math.floor(m/12)}歳${m%12}か月`}
+$('#ageFilter').onchange=renderAnalysis;$('#refreshAnalysis').onclick=renderAnalysis;
 
-  const current = book[market] ?? "";
-  const input = prompt(
-    `${names[market]}の価格を入力してください（円）`,
-    current
-  );
+$('#saveSettings').onclick=()=>{localStorage.setItem('birthDate',$('#birthDate').value||'2025-04-05');let l=readLog();l.forEach(x=>x.ageMonths=ageAt(x.date).months);saveReadLog(l);renderAnalysis();alert('保存しました')};
+$('#backup').onclick=()=>{let payload={app:'けんいちくんの本棚',version:'1.0',exportedAt:new Date().toISOString(),books,mieteLog:readLog(),kumonMaster:kumonMaster(),birthDate:birth()};let blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`kenichi-books-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('#backupout').textContent='バックアップを書き出しました。'};
+$('#restore').onchange=async e=>{try{let j=JSON.parse(await e.target.files[0].text()),r=Array.isArray(j)?j:j.books;if(!Array.isArray(r))throw Error('本棚データがありません');books=r;save();if(j.mieteLog)saveReadLog(j.mieteLog);if(j.kumonMaster)saveKumon(j.kumonMaster);if(j.birthDate)localStorage.setItem('birthDate',j.birthDate);render();renderAnalysis();$('#backupout').textContent='復元しました。'}catch(err){$('#backupout').textContent='復元できませんでした: '+err.message}};
 
-  if (input === null) return;
+$('#ask').onclick=async()=>{let q=$('#aiq').value.trim();if(!q)return;$('#aiout').textContent='考え中…';$('#aiStatus').textContent='蔵書・ミーテ・くもんデータを参照しています';let c={books:books.map(({title,author,publisher,genre,isbn,readCount,kumonLevel,genreTags})=>({title,author,publisher,genre,isbn,readCount,kumonLevel,genreTags})),mieteLog:readLog(),kumonMaster:kumonMaster(),birthDate:birth()};try{let r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,context:c})}),j=await r.json();if(!r.ok)throw Error(j.error||`AI通信エラー (${r.status})`);$('#aiout').textContent=j.text||'回答を生成できませんでした。';$('#aiStatus').textContent=''}catch(e){$('#aiStatus').textContent='AIを利用できません';$('#aiout').textContent=e.message+(String(e.message).includes('未設定')?'\nVercelのAI接続設定が必要です。':'')}};
+function conf(){return{url:$('#sburl').value.replace(/\/$/,''),key:$('#sbkey').value,email:$('#email').value,password:$('#password').value}}['sburl','sbkey','email'].forEach(x=>$('#'+x).value=localStorage.getItem(x)||'');async function auth(path){let c=conf();['sburl','sbkey','email'].forEach(x=>localStorage.setItem(x,$('#'+x).value));try{let r=await fetch(`${c.url}/auth/v1/${path}`,{method:'POST',headers:{apikey:c.key,'Content-Type':'application/json'},body:JSON.stringify({email:c.email,password:c.password})}),j=await r.json();if(!r.ok)throw Error(j.msg||j.error_description||'認証失敗');session=j;localStorage.setItem('session',JSON.stringify(j));$('#syncout').textContent='ログインしました'}catch(e){$('#syncout').textContent=e.message}}$('#signup').onclick=()=>auth('signup');$('#login').onclick=()=>auth('token?grant_type=password');$('#sync').onclick=async()=>{$('#syncout').textContent='この版では蔵書同期設定を維持しています。既存Supabase設定を利用してください。'};
 
-  const price = input.replace(/[^\d]/g, "");
-
-  if (!price) {
-    book[market] = null;
-  } else {
-    book[market] = Number(price);
-  }
-
-  book.marketCheckedAt = new Date().toISOString();
-  save();
-
-  findBook(isbn);
-};
-$("#lookup").onclick=()=>findBook($("#isbn").value);$("#storePrice").onchange=()=>{$("#isbn").value&&findBook($("#isbn").value)};$("#maxPrice").onchange=()=>{$("#isbn").value&&findBook($("#isbn").value)};
-$("#camera").onclick=async()=>{if(!("BarcodeDetector"in window))return alert("このブラウザはカメラ読取に未対応です。番号入力を使ってください。");let st=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}),v=$("#video");v.srcObject=st;await v.play();let d=new BarcodeDetector({formats:["ean_13"]}),t=setInterval(async()=>{let x=await d.detect(v).catch(()=>[]);if(x[0]){clearInterval(t);st.getTracks().forEach(y=>y.stop());$("#isbn").value=x[0].rawValue;findBook(x[0].rawValue)}},500)}
-$("#target").onchange=async e=>{let f=e.target.files[0],t=await f.text();targets=f.name.endsWith(".json")?JSON.parse(t):t.split(/\r?\n/).slice(1).filter(Boolean).map(l=>{let[title,author,publisher,isbn,priority,rarity,usedMin,usedMax]=l.split(",");return{title,author,publisher,isbn,priority,rarity,usedMin:+usedMin||null,usedMax:+usedMax||null}});missing()};function missing(){if(!targets.length)return $("#miss").innerHTML="";let a=targets.filter(t=>!books.some(b=>(t.isbn&&b.isbn===t.isbn)||norm(b.title)===norm(t.title))).sort((a,b)=>coll.compare(a.title,b.title));$("#miss").innerHTML=`<p><b>${a.length}</b>冊 未所有</p>`+a.map(x=>`<div class=book><b>${esc(x.title)}</b><span>${esc(x.author||"")}</span><span>${esc(x.publisher||"")}</span><span>${x.usedMin?`¥${x.usedMin}〜${x.usedMax||x.usedMin}`:""}</span><span>${x.rarity?`レア${x.rarity}`:""} ${x.priority?`優先${x.priority}`:""}</span></div>`).join("")}
-$("#mietefile").onchange=async e=>{let f=e.target.files[0];$("#mieteout").innerHTML=`<p>選択済み: <b>${esc(f.name)}</b></p><p>v0.1では安全のため自動回数加算はしません。PDFをサーバー側のPDF解析に接続するための入口を実装済みです。誤集計を避けるため、実際のミーテPDF様式に合わせて次段階で抽出ルールを固定します。</p>`}
-$("#ask").onclick=async()=>{let q=$("#aiq").value.trim();if(!q)return;$("#aiout").textContent="考え中…";let c=books.map(({title,author,publisher,genre,isbn,usedMin,usedMax,rarity,priority,readCount})=>({title,author,publisher,genre,isbn,usedMin,usedMax,rarity,priority,readCount}));try{let r=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,context:c})}),j=await r.json();$("#aiout").textContent=j.text||j.error}catch(e){$("#aiout").textContent=e.message}}
-function conf(){return{url:$("#sburl").value.replace(/\/$/,""),key:$("#sbkey").value,email:$("#email").value,password:$("#password").value}}["sburl","sbkey","email"].forEach(x=>$("#"+x).value=localStorage.getItem(x)||"");async function auth(path){let c=conf();["sburl","sbkey","email"].forEach(x=>localStorage.setItem(x,$("#"+x).value));try{let r=await fetch(`${c.url}/auth/v1/${path}`,{method:"POST",headers:{apikey:c.key,"Content-Type":"application/json"},body:JSON.stringify({email:c.email,password:c.password})}),j=await r.json();if(!r.ok)throw Error(j.msg||j.error_description||"認証失敗");session=j;localStorage.setItem("session",JSON.stringify(j));$("#syncout").textContent="ログインしました"}catch(e){$("#syncout").textContent=e.message}}$("#signup").onclick=()=>auth("signup");$("#login").onclick=()=>auth("token?grant_type=password");$("#sync").onclick=async()=>{let c=conf();session=session||JSON.parse(localStorage.getItem("session")||"null");if(!session?.access_token)return $("#syncout").textContent="ログインしてください";try{let h={apikey:c.key,Authorization:`Bearer ${session.access_token}`,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates"},p=books.map(b=>({user_id:session.user.id,book_id:b.id,data:b,updated_at:new Date().toISOString()})),r=await fetch(`${c.url}/rest/v1/books`,{method:"POST",headers:h,body:JSON.stringify(p)});if(!r.ok)throw Error(await r.text());r=await fetch(`${c.url}/rest/v1/books?user_id=eq.${session.user.id}&select=data`,{headers:h});let a=await r.json(),m=new Map(books.map(b=>[b.id,b]));a.forEach(x=>m.set(x.data.id,x.data));books=[...m.values()];save();render();$("#syncout").textContent="同期完了"}catch(e){$("#syncout").textContent=e.message}};init();
-if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
-const ih=document.querySelector("#installHelp"),hi=document.querySelector("#hideInstall");
-if(localStorage.getItem("hideInstall")==="1"&&ih)ih.style.display="none";
-if(hi)hi.onclick=()=>{localStorage.setItem("hideInstall","1");ih.style.display="none"};
-
-// v0.5 iPhone backup / restore
-const backupBtn=document.querySelector("#backup"),restoreInput=document.querySelector("#restore"),backupOut=document.querySelector("#backupout");
-if(backupBtn) backupBtn.onclick=()=>{
-  const payload={app:"けんいちくんの本棚",version:"0.5",exportedAt:new Date().toISOString(),books};
-  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
-  a.download=`kenichi-books-backup-${new Date().toISOString().slice(0,10)}.json`;
-  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-  if(backupOut) backupOut.textContent="バックアップを書き出しました。iPhoneの「ファイル」に保存できます。";
-};
-if(restoreInput) restoreInput.onchange=async e=>{
-  try{
-    const f=e.target.files?.[0]; if(!f)return;
-    const j=JSON.parse(await f.text());
-    const restored=Array.isArray(j)?j:j.books;
-    if(!Array.isArray(restored))throw Error("本棚データが見つかりません");
-    books=restored; save(); render();
-    if(backupOut) backupOut.textContent=`${books.length}件を復元しました。`;
-  }catch(err){ if(backupOut) backupOut.textContent="復元できませんでした: "+err.message; }
-};
-// iPhone / Safari対応 ZXing バーコードスキャナー
-let zxingControls = null;
-
-$('#scan').onclick = async () => {
-  const video = $('#video');
-
-  if (!window.ZXingBrowser) {
-    alert('バーコード読取機能を読み込めませんでした。ページを再読み込みしてください。');
-    return;
-  }
-
-  try {
-    if (zxingControls) {
-      zxingControls.stop();
-      zxingControls = null;
-    }
-
-    const codeReader = new ZXingBrowser.BrowserMultiFormatReader();
-
-    zxingControls = await codeReader.decodeFromVideoDevice(
-      undefined,
-      video,
-      async (result, error, controls) => {
-        if (!result) return;
-
-        const code = result.getText().replace(/\D/g, '');
-
-        // 日本の書籍ISBN（978/979）または13桁JANを対象
-        if (code.length !== 13) return;
-
-        controls.stop();
-        zxingControls = null;
-
-        $('#isbn').value = code;
-
-        try {
-          await findBook(code);
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    );
-  } catch (e) {
-    console.error(e);
-    alert('カメラを開始できませんでした。iPhoneのカメラ許可を確認してください。');
-  }
-};
+init();setTimeout(renderScanProgress,0);
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=11',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
