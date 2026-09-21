@@ -9,6 +9,14 @@ if (Array.isArray(savedBooks)) {
     moonBook.isbn = '9784494006830';
     localStorage.setItem('kb', JSON.stringify(savedBooks));
   }
+const halloweenBook = savedBooks.find(
+  b => b.title === 'ハロウィンドキドキおばけの日 ますだゆうこ'
+);
+
+if (halloweenBook) {
+  halloweenBook.title = 'ハロウィンドキドキおばけの日！';
+  localStorage.setItem('kb', JSON.stringify(savedBooks));
+}
 }
 async function init(){books=JSON.parse(localStorage.getItem("kb")||"null")||await fetch("/initial_books.json").then(r=>r.json());render()}
 function cmp(a,b){let s=$("#sort").value;if(s==="author")return coll.compare(a.author||"ん",b.author||"ん");if(s==="publisher")return coll.compare(a.publisher||"ん",b.publisher||"ん");if(s==="priceAsc")return(a.usedMin??1e9)-(b.usedMin??1e9);if(s==="priceDesc")return(b.usedMax??-1)-(a.usedMax??-1);if(s==="mercariAsc")return(a.mercariPrice??1e9)-(b.mercariPrice??1e9);if(s==="rakumaAsc")return(a.rakumaPrice??1e9)-(b.rakumaPrice??1e9);if(s==="valuebooksAsc")return(a.valuebooksPrice??1e9)-(b.valuebooksPrice??1e9);if(s==="rarity")return"SABC".indexOf(a.rarity||"Z")-"SABC".indexOf(b.rarity||"Z");if(s==="priority")return"SABC".indexOf(a.priority||"Z")-"SABC".indexOf(b.priority||"Z");return coll.compare(a.title,b.title)}
