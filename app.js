@@ -259,9 +259,15 @@ function integratedSummary(){
  $('#integratedStatus').innerHTML=`<b>統合状況</b><p>蔵書 ${books.length}冊 ／ 書誌情報あり ${withMeta}冊 ／ ミーテ反映 ${total}回</p><small>家庭保育園資料の働きかけも踏まえた補強候補分野：${weak.map(x=>esc(x[0])+' '+x[1]+'冊').join('・')}</small>`;
 }
 
+const OVERSEAS_FALLBACK=[{"category":"季節・行事","title":"はるにれ","reason":"四季の変化を写真で追える。海外生活でも日本の季節感を補いやすい。","priority":"S","basis":"季節・自然","author":"姉崎一馬","publisher":"福音館書店"},{"category":"季節・行事","title":"さくら","reason":"日本の春と桜を絵本で残せる。","priority":"A","basis":"季節・自然","author":"長谷川摂子／矢間芳子","publisher":"福音館書店"},{"category":"季節・行事","title":"おかしなゆき ふしぎなこおり","reason":"冬の自然現象を写真で観察できる。","priority":"A","basis":"季節・自然","author":"片平孝","publisher":"ポプラ社"},{"category":"日本文化・昔話","title":"三びきのこぶた","reason":"昔話の語りと物語構造に触れる定番。","priority":"A","basis":"日本文化・昔話","author":"瀬田貞二","publisher":"福音館書店"},{"category":"日本文化・昔話","title":"かえるをのんだととさん","reason":"日本の昔話・語りのリズムを海外でも継続できる。","priority":"A","basis":"日本文化・昔話","author":"日野十成／斎藤隆夫","publisher":"福音館書店"},{"category":"自然・科学","title":"はなをくんくん","reason":"季節の変化と動物を物語で結びつける。","priority":"S","basis":"自然・観察","author":"ルース・クラウス／マーク・シーモント","publisher":"福音館書店"},{"category":"自然・科学","title":"しっぽのはたらき","reason":"動物の体の働きを観察する科学絵本。","priority":"A","basis":"自然・観察","author":"川田健／藪内正幸","publisher":"福音館書店"},{"category":"自然・科学","title":"たべられるしょくぶつ","reason":"身近な食べ物と植物を結びつける。","priority":"A","basis":"自然・食べ物","author":"森谷憲／寺島龍一","publisher":"福音館書店"},{"category":"図鑑","title":"小学館の図鑑NEO 植物","reason":"海外で実物に触れにくい日本の植物も含め、長く参照できる。","priority":"A","basis":"図鑑補強"},{"category":"図鑑","title":"小学館の図鑑NEO 昆虫","reason":"季節の虫・日本の昆虫を体系的に確認できる。","priority":"A","basis":"図鑑補強"},{"category":"音楽・童謡","title":"くもんのうた200えほん","reason":"童謡・唱歌を家庭で継続し、日本語の歌とリズムを維持しやすい。","priority":"S","basis":"歌・リズム","author":"公文教育研究会","publisher":"くもん出版"},{"category":"日本語・ことば","title":"あいうえおの本","reason":"日本語の文字・音への導入を海外でも継続できる。","priority":"A","basis":"日本語","author":"安野光雅"},{"category":"数・知育","title":"あかたろうの1・2・3の3・4・5","reason":"生活場面と数を結びつける。","priority":"A","basis":"数・生活","author":"きたやまようこ","publisher":"偕成社"}];
 let overseasRecs=[];
 async function loadOverseasRecs(){
-  try{overseasRecs=await fetch('/overseas_recommendations.json',{cache:'no-store'}).then(r=>r.json())}catch(e){overseasRecs=[]}
+  try{
+    const r=await fetch('/overseas_recommendations.json?v=27',{cache:'no-store'});
+    if(!r.ok)throw new Error('recommendations '+r.status);
+    const j=await r.json();
+    overseasRecs=Array.isArray(j)&&j.length?j:OVERSEAS_FALLBACK;
+  }catch(e){overseasRecs=OVERSEAS_FALLBACK}
   const cats=[...new Set(overseasRecs.map(x=>x.category))].sort(coll.compare);
   if($('#overseasCategory')) $('#overseasCategory').innerHTML='<option value="">全ジャンル</option>'+cats.map(x=>`<option>${esc(x)}</option>`).join('');
   renderOverseas();
@@ -269,11 +275,14 @@ async function loadOverseasRecs(){
 function renderOverseas(){
   if(!$('#overseasList'))return;
   const cat=$('#overseasCategory')?.value||'', pri=$('#overseasPriority')?.value||'';
-  const owned=x=>isOwnedCandidate(x);
   const all=overseasRecs.filter(x=>(!cat||x.category===cat)&&(!pri||x.priority===pri));
-  const missing=all.filter(x=>!owned(x));
-  $('#overseasSummary').innerHTML=`<p><b>不足候補 ${missing.length}冊</b>／表示対象 ${all.length}冊</p>`;
-  $('#overseasList').innerHTML=missing.map(x=>`<div class=book><b>${esc(x.title)}</b><span class=tag>${esc(x.category)}</span><span class=tag>優先${esc(x.priority)}</span><span>${esc(x.reason)}</span><small>${[x.author&&'作者：'+esc(x.author),x.publisher&&'出版社：'+esc(x.publisher),x.publishedDate&&'発売・初版：'+esc(x.publishedDate)].filter(Boolean).join(' ／ ')}</small><small>基準：${esc(x.basis)}</small></div>`).join('')||'<p>この条件では不足候補はありません。</p>';
+  const missing=all.filter(x=>!isOwnedCandidate(x));
+  const owned=all.filter(x=>isOwnedCandidate(x));
+  $('#overseasSummary').innerHTML=`<div class="panel"><b>海外赴任前の購入候補</b><p><strong>${missing.length}冊</strong> ／ 所有済み候補 ${owned.length}冊 ／ 候補全体 ${all.length}冊</p><small>現在の本棚と照合し、所有済みは購入候補から除外しています。</small></div>`;
+  const card=x=>`<div class=book><div><b>${esc(x.title)}</b><div><span class=tag>${esc(x.category)}</span><span class=tag>優先${esc(x.priority)}</span></div></div><span>${esc(x.reason||'')}</span><span>${[x.author&&'作者：'+esc(x.author),x.publisher&&'出版社：'+esc(x.publisher),x.publishedDate&&'発売・初版：'+esc(x.publishedDate)].filter(Boolean).join('<br>')||'書誌情報確認中'}</span><small>基準：${esc(x.basis||'')}</small></div>`;
+  $('#overseasList').innerHTML=missing.length
+    ? `<h3>これから揃えたい本</h3>${missing.map(card).join('')}${owned.length?`<details><summary>所有済みの候補本 ${owned.length}冊</summary>${owned.map(card).join('')}</details>`:''}`
+    : `<div class="panel"><b>現在の候補はすべて所有済みです。</b><p>「ChatGPTで今買う本を優先判定」から追加候補を出せます。</p></div>${owned.length?`<details><summary>所有済みの候補本 ${owned.length}冊</summary>${owned.map(card).join('')}</details>`:''}`;
 }
 if($('#showOverseas'))$('#showOverseas').onclick=renderOverseas;
 if($('#overseasCategory'))$('#overseasCategory').onchange=renderOverseas;
@@ -312,4 +321,4 @@ function classifyMieteTitle(title){
 }
 
 init().then(async()=>{await applyLibraryMetadata();await mergeBundledMiete();render();renderAnalysis();renderMieteRank();integratedSummary();await loadOverseasRecs();integratedSummary()});setTimeout(renderScanProgress,0);
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=24',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=27',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
