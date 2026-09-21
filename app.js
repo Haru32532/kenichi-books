@@ -173,13 +173,14 @@ function renderMissingList(){
     <b>${esc(x.title)}</b><span class=tag>くもん${esc(x.level)}</span>
     <span>作者：${esc(x.author||'未登録')}</span>
     <span>出版社：${esc(x.publisher||'未登録')}</span>
+    <span>発売・初版：${esc(x.publishedDate||'未確認')}</span>
     <span>レア度：${esc(x.rarity||'―')}</span>
     <span>参考中古価格：${esc(x.usedPriceGuide||'―')}</span>
   </div>`).join('');
 }
 function loadMissingList(){
   const year=$('#kumonYear').value,lv=$('#kumonLevelFilter').value,list=kumonMaster()[year]||[];
-  currentMissing=list.filter(x=>(!lv||x.level===lv)&&!books.some(b=>norm(b.title)===norm(x.title)));
+  currentMissing=list.filter(x=>(!lv||x.level===lv)&&!isOwnedCandidate(x));
   renderMissingList();
 }
 $('#showKumonMissing').onclick=loadMissingList;
@@ -195,12 +196,44 @@ function ageAtLabel(m){return`${Math.floor(m/12)}歳${m%12}か月`}
 $('#ageFilter').onchange=renderAnalysis;$('#refreshAnalysis').onclick=renderAnalysis;
 
 $('#saveSettings').onclick=()=>{localStorage.setItem('birthDate',$('#birthDate').value||'2025-04-05');let l=readLog();l.forEach(x=>x.ageMonths=ageAt(x.date).months);saveReadLog(l);renderAnalysis();alert('保存しました')};
-$('#backup').onclick=()=>{let payload={app:'けんいちくんの本棚',version:'1.0',exportedAt:new Date().toISOString(),books,mieteLog:[],kumonMaster:kumonMaster(),birthDate:birth()};let blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`kenichi-books-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('#backupout').textContent='バックアップを書き出しました。'};
+$('#backup').onclick=()=>{let payload={app:'けんいちくんの本棚',version:'1.0',exportedAt:new Date().toISOString(),books,mieteLog:readLog(),kumonMaster:kumonMaster(),birthDate:birth()};let blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`kenichi-books-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('#backupout').textContent='バックアップを書き出しました。'};
 $('#restore').onchange=async e=>{try{let j=JSON.parse(await e.target.files[0].text()),r=Array.isArray(j)?j:j.books;if(!Array.isArray(r))throw Error('本棚データがありません');books=r;save();if(j.mieteLog)saveReadLog(j.mieteLog);if(j.kumonMaster)saveKumon(j.kumonMaster);if(j.birthDate)localStorage.setItem('birthDate',j.birthDate);render();renderAnalysis();$('#backupout').textContent='復元しました。'}catch(err){$('#backupout').textContent='復元できませんでした: '+err.message}};
 
 $('#ask').onclick=async()=>{let q=$('#aiq').value.trim();if(!q)return;$('#aiout').textContent='考え中…';$('#aiStatus').textContent='蔵書・ミーテ・くもんデータを参照しています';let c={books:books.map(({title,author,publisher,genre,isbn,readCount,kumonLevel,genreTags})=>({title,author,publisher,genre,isbn,readCount,kumonLevel,genreTags})),mieteLog:[],kumonMaster:kumonMaster(),birthDate:birth()};try{let r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,context:c})}),raw=await r.text(),j={};try{j=raw?JSON.parse(raw):{}}catch(_){throw Error(`AI APIが見つかりません (${r.status})。/api/ai のデプロイを確認してください。`)}if(!r.ok)throw Error(j.error||`AI通信エラー (${r.status})`);$('#aiout').textContent=j.text||'回答を生成できませんでした。';$('#aiStatus').textContent=''}catch(e){$('#aiStatus').textContent='AI接続エラー';$('#aiout').textContent=e.message||String(e)}};
 function conf(){return{url:$('#sburl').value.replace(/\/$/,''),key:$('#sbkey').value,email:$('#email').value,password:$('#password').value}}['sburl','sbkey','email'].forEach(x=>$('#'+x).value=localStorage.getItem(x)||'');async function auth(path){let c=conf();['sburl','sbkey','email'].forEach(x=>localStorage.setItem(x,$('#'+x).value));try{let r=await fetch(`${c.url}/auth/v1/${path}`,{method:'POST',headers:{apikey:c.key,'Content-Type':'application/json'},body:JSON.stringify({email:c.email,password:c.password})}),j=await r.json();if(!r.ok)throw Error(j.msg||j.error_description||'認証失敗');session=j;localStorage.setItem('session',JSON.stringify(j));$('#syncout').textContent='ログインしました'}catch(e){$('#syncout').textContent=e.message}}$('#signup').onclick=()=>auth('signup');$('#login').onclick=()=>auth('token?grant_type=password');$('#sync').onclick=async()=>{$('#syncout').textContent='この版では蔵書同期設定を維持しています。既存Supabase設定を利用してください。'};
 
+
+
+let libraryMetadata=[];
+function titleMatchKey(title){return norm(String(title||'').replace(/^(おでかけ版|ボードブック版)/,''))}
+function findBookByTitle(title){const n=titleMatchKey(title);return books.find(b=>titleMatchKey(b.title)===n)}
+function isOwnedCandidate(x){return books.some(b=>(x.isbn&&b.isbn&&String(x.isbn).replace(/\D/g,'')===String(b.isbn).replace(/\D/g,''))||titleMatchKey(b.title)===titleMatchKey(x.title))}
+async function applyLibraryMetadata(){
+ try{libraryMetadata=await fetch('/library_metadata.json',{cache:'no-store'}).then(r=>r.json())}catch(e){libraryMetadata=[]}
+ let changed=0;
+ for(const m of libraryMetadata){let b=findBookByTitle(m.title);if(!b)continue;
+   for(const k of ['author','illustrator','translator','publisher','publishedDate','isbn'])if(!b[k]&&m[k]){b[k]=m[k];changed++}
+   if(!b.genre&&m.genre)b.genre=m.genre;
+ }
+ if(changed)save();
+}
+function ageMonthsForDate(date){return ageAt(date).months}
+async function mergeBundledMiete(){
+ let j;try{j=await fetch('/miete_2026_import.json',{cache:'no-store'}).then(r=>r.json())}catch(e){return}
+ const old=readLog(),map=new Map(old.map(x=>[x.id,x]));let added=0;
+ for(const e of (j.events||[])){let b=findBookByTitle(e.title);if(!b)continue;let x={...e,bookId:b.id,ageMonths:ageMonthsForDate(e.date)};if(!map.has(x.id)){map.set(x.id,x);added++}}
+ if(added){saveReadLog([...map.values()].sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time)));recalcReadCounts();save()}
+ window._mieteBundle=j;if($('#mieteout'))$('#mieteout').innerHTML=`<p><b>保存済みミーテPDFを自動反映</b>：2026年4・5・6・8月／蔵書と照合できた ${j.events.length}件</p><small>歌・Baby Kumon活動は絵本回数と分離しています。</small>`;
+}
+function metaLine(b){let bits=[];if(b.author)bits.push('作者：'+esc(b.author));if(b.illustrator)bits.push('絵：'+esc(b.illustrator));if(b.publisher)bits.push('出版社：'+esc(b.publisher));if(b.publishedDate)bits.push('発売・初版：'+esc(b.publishedDate));if(b.isbn)bits.push('ISBN：'+esc(b.isbn));return bits.join(' ／ ')}
+function integratedSummary(){
+ if(!$('#integratedStatus'))return;
+ const logs=readLog(),total=logs.reduce((a,x)=>a+(+x.count||0),0),withMeta=books.filter(b=>b.author||b.publisher||b.publishedDate).length;
+ const domains={'季節・行事':0,'日本文化・昔話':0,'自然・科学':0,'図鑑':0,'音楽・童謡':0,'日本語・ことば':0,'生活':0,'数・知育':0};
+ for(const b of books){const z=(genreOf(b)+' '+bookTags(b).join(' ')+' '+b.title);if(/季節|行事|月|春|夏|秋|冬|クリスマス|ハロウィン/.test(z))domains['季節・行事']++;if(/日本文化|昔話|古典|論語|日本史|文学/.test(z))domains['日本文化・昔話']++;if(/自然|科学|動物|植物|虫|魚|鳥|からだ/.test(z))domains['自然・科学']++;if(/図鑑|絵辞典/.test(z))domains['図鑑']++;if(/音楽|うた|歌|童謡|リズム/.test(z))domains['音楽・童謡']++;if(/ことば|音読|日本語|あいうえお/.test(z))domains['日本語・ことば']++;if(/生活|食べ物|食事|ねんね|着替/.test(z))domains['生活']++;if(/算数|数・|時計|知育|形|九九/.test(z))domains['数・知育']++;}
+ const weak=Object.entries(domains).sort((a,b)=>a[1]-b[1]).slice(0,4);
+ $('#integratedStatus').innerHTML=`<b>統合状況</b><p>蔵書 ${books.length}冊 ／ 書誌情報あり ${withMeta}冊 ／ ミーテ反映 ${total}回</p><small>家庭保育園資料の働きかけも踏まえた補強候補分野：${weak.map(x=>esc(x[0])+' '+x[1]+'冊').join('・')}</small>`;
+}
 
 let overseasRecs=[];
 async function loadOverseasRecs(){
@@ -212,11 +245,11 @@ async function loadOverseasRecs(){
 function renderOverseas(){
   if(!$('#overseasList'))return;
   const cat=$('#overseasCategory')?.value||'', pri=$('#overseasPriority')?.value||'';
-  const owned=x=>books.some(b=>norm(b.title)===norm(x.title));
+  const owned=x=>isOwnedCandidate(x);
   const all=overseasRecs.filter(x=>(!cat||x.category===cat)&&(!pri||x.priority===pri));
   const missing=all.filter(x=>!owned(x));
   $('#overseasSummary').innerHTML=`<p><b>不足候補 ${missing.length}冊</b>／表示対象 ${all.length}冊</p>`;
-  $('#overseasList').innerHTML=missing.map(x=>`<div class=book><b>${esc(x.title)}</b><span class=tag>${esc(x.category)}</span><span class=tag>優先${esc(x.priority)}</span><span>${esc(x.reason)}</span><small>基準：${esc(x.basis)}</small></div>`).join('')||'<p>この条件では不足候補はありません。</p>';
+  $('#overseasList').innerHTML=missing.map(x=>`<div class=book><b>${esc(x.title)}</b><span class=tag>${esc(x.category)}</span><span class=tag>優先${esc(x.priority)}</span><span>${esc(x.reason)}</span><small>${[x.author&&'作者：'+esc(x.author),x.publisher&&'出版社：'+esc(x.publisher),x.publishedDate&&'発売・初版：'+esc(x.publishedDate)].filter(Boolean).join(' ／ ')}</small><small>基準：${esc(x.basis)}</small></div>`).join('')||'<p>この条件では不足候補はありません。</p>';
 }
 if($('#showOverseas'))$('#showOverseas').onclick=renderOverseas;
 if($('#overseasCategory'))$('#overseasCategory').onchange=renderOverseas;
@@ -233,11 +266,11 @@ function readingProfileForAI(){
 }
 if($('#askOverseasAI'))$('#askOverseasAI').onclick=async()=>{
  const box=$('#overseasAI'); box.textContent='分析中…';
- const ownedSummary=books.filter(b=>b.owned!==false).map(b=>({title:b.title,genre:genreOf(b)})).slice(0,400);
- const missing=overseasRecs.filter(x=>!books.some(b=>norm(b.title)===norm(x.title)));
+ const ownedSummary=books.filter(b=>b.owned!==false).map(b=>({title:b.title,author:b.author||'',publisher:b.publisher||'',publishedDate:b.publishedDate||'',genre:genreOf(b),readCount:b.readCount||0})).slice(0,400);
+ const missing=overseasRecs.filter(x=>!isOwnedCandidate(x));
  try{
    const r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-     task:'海外赴任前の蔵書不足分析。季節、日本文化・昔話、自然・科学、図鑑、音楽・童謡、日本語・ことば、数・知育のバランスを見て、既所有を重複推薦せず、優先候補と理由を簡潔に日本語で提案してください。家庭保育園資料そのものに記載があると断定せず、資料で重視される領域と現在の蔵書・読み聞かせ傾向を材料にしてください。',
+     task:'海外赴任前に今買う本を優先判定してください。季節、日本文化・昔話、自然・科学、図鑑、音楽・童謡、日本語・ことば、数・知育の分野、現在の蔵書、ミーテで実際によく読む本を統合してください。既所有は推薦しない。優先S/A/B、具体的タイトル、理由、補う分野を示す。家庭保育園資料に明記された本だと断定せず、資料で重視される絵本・歌・リズム・自然・生活語彙等の領域との整合として説明してください。',
      books:ownedSummary, missingCandidates:missing, readingTop:readingProfileForAI(), mieteLog:[]
    })});
    const j=await r.json();
@@ -254,5 +287,5 @@ function classifyMieteTitle(title){
  return 'book';
 }
 
-init(); loadOverseasRecs();setTimeout(renderScanProgress,0);
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=11',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
+init().then(async()=>{await applyLibraryMetadata();await mergeBundledMiete();render();renderAnalysis();renderMieteRank();integratedSummary();await loadOverseasRecs();integratedSummary()});setTimeout(renderScanProgress,0);
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=24',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
