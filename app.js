@@ -1,4 +1,15 @@
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];let books=[],targets=[],editId=null,session=null;const coll=new Intl.Collator("ja",{numeric:true}),norm=s=>(s||"").normalize("NFKC").toLowerCase().replace(/[\s　・･\-―ー]/g,""),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));function save(){localStorage.setItem("kb",JSON.stringify(books))}
+// 既存の蔵書データに不足しているISBNを補完
+const savedBooks = JSON.parse(localStorage.getItem('kb') || 'null');
+
+if (Array.isArray(savedBooks)) {
+  const moonBook = savedBooks.find(b => b.title === '14ひきのおつきみ');
+
+  if (moonBook && !moonBook.isbn) {
+    moonBook.isbn = '9784494006830';
+    localStorage.setItem('kb', JSON.stringify(savedBooks));
+  }
+}
 async function init(){books=JSON.parse(localStorage.getItem("kb")||"null")||await fetch("/initial_books.json").then(r=>r.json());render()}
 function cmp(a,b){let s=$("#sort").value;if(s==="author")return coll.compare(a.author||"ん",b.author||"ん");if(s==="publisher")return coll.compare(a.publisher||"ん",b.publisher||"ん");if(s==="priceAsc")return(a.usedMin??1e9)-(b.usedMin??1e9);if(s==="priceDesc")return(b.usedMax??-1)-(a.usedMax??-1);if(s==="mercariAsc")return(a.mercariPrice??1e9)-(b.mercariPrice??1e9);if(s==="rakumaAsc")return(a.rakumaPrice??1e9)-(b.rakumaPrice??1e9);if(s==="valuebooksAsc")return(a.valuebooksPrice??1e9)-(b.valuebooksPrice??1e9);if(s==="rarity")return"SABC".indexOf(a.rarity||"Z")-"SABC".indexOf(b.rarity||"Z");if(s==="priority")return"SABC".indexOf(a.priority||"Z")-"SABC".indexOf(b.priority||"Z");return coll.compare(a.title,b.title)}
 function bookTags(b){let a=[];if(b.kumonLevel)a.push("くもん"+b.kumonLevel);if(Array.isArray(b.genreTags))a.push(...b.genreTags);else if(b.genre)a.push(b.genre);return[...new Set(a.filter(Boolean))]}
