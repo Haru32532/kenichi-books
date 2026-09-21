@@ -1,10 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "outputDirectory": "public",
-  "cleanUrls": true,
-  "rewrites": [
-    { "source": "/api/ai", "destination": "/api/ai.mjs" },
-    { "source": "/api/library", "destination": "/api/library.mjs" }
-  ]
+  "outputDirectory": "public"
 }
