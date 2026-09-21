@@ -42,6 +42,9 @@ function priceDecision(hit,storePrice,maxPrice){
 async function findBook(code){
  try{
   let{hit,info}=await lookup(code),links=marketLinks(info);
+  if (!hit) {
+  hit = linkScannedIsbn(info);
+　}
   let storePrice=$("#storePrice").value===""?null:+$("#storePrice").value;
   let maxPrice=$("#maxPrice").value===""?null:+$("#maxPrice").value;
   let d=priceDecision(hit,storePrice,maxPrice);
