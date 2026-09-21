@@ -1,11 +1,21 @@
-import { access } from 'node:fs/promises';
-const required = [
-  'public/index.html',
-  'public/app.js',
-  'public/style.css',
-  'public/initial_books.json',
-  'public/manifest.webmanifest',
-  'public/sw.js'
+import { access, copyFile, mkdir } from 'node:fs/promises';
+
+const files = [
+  'index.html',
+  'app.js',
+  'style.css',
+  'initial_books.json',
+  'manifest.webmanifest',
+  'sw.js',
+  'icon-180.png',
+  'icon-512.png'
 ];
-for (const file of required) await access(file);
-console.log('Static PWA files verified. Vercel output directory: public');
+
+await mkdir('public', { recursive: true });
+
+for (const file of files) {
+  await access(file);
+  await copyFile(file, `public/${file}`);
+}
+
+console.log('Static PWA files copied from repository root to public/.');
