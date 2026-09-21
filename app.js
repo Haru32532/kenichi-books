@@ -284,9 +284,22 @@ function renderOverseas(){
     ? `<h3>これから揃えたい本</h3>${missing.map(card).join('')}${owned.length?`<details><summary>所有済みの候補本 ${owned.length}冊</summary>${owned.map(card).join('')}</details>`:''}`
     : `<div class="panel"><b>現在の候補はすべて所有済みです。</b><p>「ChatGPTで今買う本を優先判定」から追加候補を出せます。</p></div>${owned.length?`<details><summary>所有済みの候補本 ${owned.length}冊</summary>${owned.map(card).join('')}</details>`:''}`;
 }
-if($('#showOverseas'))$('#showOverseas').onclick=renderOverseas;
+if($('#showOverseas'))$('#showOverseas').onclick=()=>{
+  if(!overseasRecs.length)overseasRecs=OVERSEAS_FALLBACK;
+  renderOverseas();
+};
 if($('#overseasCategory'))$('#overseasCategory').onchange=renderOverseas;
 if($('#overseasPriority'))$('#overseasPriority').onchange=renderOverseas;
+
+
+// 海外赴任準備は、蔵書・ミーテ等の初期化完了を待たずに候補を表示する。
+(function showOverseasImmediately(){
+  overseasRecs=OVERSEAS_FALLBACK;
+  const cats=[...new Set(overseasRecs.map(x=>x.category))].sort(coll.compare);
+  if($('#overseasCategory')) $('#overseasCategory').innerHTML='<option value="">全ジャンル</option>'+cats.map(x=>`<option>${esc(x)}</option>`).join('');
+  renderOverseas();
+  loadOverseasRecs().catch(()=>{overseasRecs=OVERSEAS_FALLBACK;renderOverseas()});
+})();
 
 function readingProfileForAI(){
  const log=readLog();
@@ -320,5 +333,5 @@ function classifyMieteTitle(title){
  return 'book';
 }
 
-init().then(async()=>{await applyLibraryMetadata();await mergeBundledMiete();render();renderAnalysis();renderMieteRank();integratedSummary();await loadOverseasRecs();integratedSummary()});setTimeout(renderScanProgress,0);
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=27',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
+init().then(async()=>{await applyLibraryMetadata();await mergeBundledMiete();render();renderAnalysis();renderMieteRank();integratedSummary();integratedSummary()});setTimeout(renderScanProgress,0);
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=28',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
