@@ -464,7 +464,7 @@ function classifyMieteTitle(title){
 }
 
 init().then(async()=>{await applyLibraryMetadata();await mergeBundledMiete();await syncOfficialKumon2026(false);render();renderAnalysis();renderMieteRank();integratedSummary();renderLibraryEnrichStatus();integratedSummary()});setTimeout(renderScanProgress,0);
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=37',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=38',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
 
 
 // ===== v35 sales foundation =====
@@ -587,3 +587,13 @@ setTimeout(()=>{
  if($('#makeRecommendations'))$('#makeRecommendations').onclick=renderRecommendations;
  if($('#saveLibrarySettings'))$('#saveLibrarySettings').onclick=saveLibrarySettings;
 },500);
+
+
+// ===== v38 verified book-master enrichment =====
+function renderMasterQuality(){
+ const el=$('#masterQuality');if(!el)return;
+ const owned=books.filter(b=>b.owned!==false), n=owned.length||1;
+ const c=f=>owned.filter(b=>String(b[f]||'').trim()).length;
+ el.textContent=`書誌整備：作者 ${c('author')}/${owned.length}｜出版社 ${c('publisher')}/${owned.length}｜ISBN ${c('isbn')}/${owned.length}`;
+}
+setTimeout(renderMasterQuality,650);
