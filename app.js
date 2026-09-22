@@ -464,7 +464,7 @@ function classifyMieteTitle(title){
 }
 
 init().then(async()=>{await applyLibraryMetadata();await mergeBundledMiete();await syncOfficialKumon2026(false);render();renderAnalysis();renderMieteRank();integratedSummary();renderLibraryEnrichStatus();integratedSummary()});setTimeout(renderScanProgress,0);
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=39',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=40',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
 
 
 // ===== v35 sales foundation =====
@@ -610,3 +610,14 @@ function addMasterScan(info,code){const isbn=String(info?.isbn||code||'').replac
 function exportMasterScans(){const a=masterScans(),h=['ISBN-13','取得タイトル','作者','出版社','発行情報','スキャン日時','確認状態'],q=v=>`"${String(v??'').replaceAll('"','""')}"`,csv='\ufeff'+[h,...a.map(x=>[x.isbn,x.title,x.author,x.publisher,x.publishedDate,x.scannedAt,x.status])].map(r=>r.map(q).join(',')).join('\r\n'),b=new Blob([csv],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(b),ln=document.createElement('a');ln.href=u;ln.download='蔵書マスター整備スキャン結果.csv';ln.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 function clearMasterScans(){if(!confirm('整備用スキャン結果だけを全消去します。現在の本棚は変更しません。よろしいですか？'))return;localStorage.removeItem(MASTER_SCAN_KEY);renderMasterScans()}
 setTimeout(()=>{if($('#masterScanMode'))$('#masterScanMode').onclick=setMasterScanMode;if($('#masterScanExport'))$('#masterScanExport').onclick=exportMasterScans;if($('#masterScanClear'))$('#masterScanClear').onclick=clearMasterScans;renderMasterScans()},550);
+
+
+const MC40='masterCatalog_v40';let mcCtl=null;
+const mcA=()=>{try{return JSON.parse(localStorage.getItem(MC40)||'[]')}catch{return[]}},mcS=a=>{localStorage.setItem(MC40,JSON.stringify(a));mcR()},mcM=s=>$('#mcMsg').textContent=s;
+function mcR(){const a=mcA();$('#mcCount').textContent=a.length;$('#mcList').innerHTML=a.slice().reverse().map(x=>`<div class=bookline><b>${esc(x.title||'タイトル未取得')}</b>｜${esc(x.author||'作者未取得')}｜${esc(x.publisher||'出版社未取得')}<br><small>${x.isbn?'ISBN '+esc(x.isbn):'現物ISBNなし・タイトル照合'}｜${esc(x.status)}</small></div>`).join('')}
+function mcAdd(x){let a=mcA(),o=x.isbn?a.find(y=>y.isbn===x.isbn):null;o?Object.assign(o,x):a.push(x);mcS(a)}
+async function mcISBN(raw){let code=String(raw||'').replace(/\D/g,'');if(code.length!==13)return mcM('ISBN-13を確認してください。');try{mcM('検索中…');let r=await lookup(code),i=r.info||{};mcAdd({isbn:i.isbn||code,title:i.title||'',author:i.author||'',publisher:i.publisher||'',publishedDate:i.publishedDate||'',status:'現物ISBN確認済',at:new Date().toISOString()});mcM('整備リストへ自動登録しました。')}catch(e){mcM('検索エラー：'+e.message)}}
+async function mcTitle(){let q=$('#mcTitle').value.trim(),el=$('#mcCandidates');if(!q)return;mcM('候補検索中…');try{let r=await fetch('https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent('intitle:'+q)+'&maxResults=8&printType=books'),j=await r.json(),c=(j.items||[]).map(x=>x.volumeInfo||{}).filter(x=>x.title);el.innerHTML=c.map((v,n)=>`<div class=candidate><b>${esc(v.title)}</b><br>${esc((v.authors||[]).join('・')||'作者不明')}｜${esc(v.publisher||'出版社不明')}｜${esc(v.publishedDate||'発行年不明')}<br><button data-n=${n}>この候補を選ぶ</button></div>`).join('')||'候補が見つかりません';el.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{let v=c[+b.dataset.n];mcAdd({isbn:'',title:v.title,author:(v.authors||[]).join('・'),publisher:v.publisher||'',publishedDate:v.publishedDate||'',status:'タイトル候補から選択・版要確認',at:new Date().toISOString()});el.innerHTML='';mcM('整備リストへ登録しました。')})}catch(e){mcM('検索エラー：'+e.message)}}
+async function mcCam(){try{let r=new ZXingBrowser.BrowserMultiFormatReader();mcCtl=await r.decodeFromVideoDevice(undefined,'mcVideo',(res,err,ctl)=>{if(res&&/^97[89]\d{10}$/.test(res.getText())){ctl.stop();mcCtl=null;mcISBN(res.getText())}});mcM('ISBNバーコードを映してください。')}catch(e){mcM('カメラエラー：'+e.message)}}
+function mcExport(){let a=mcA(),h=['ISBN-13','タイトル','作者','出版社','発行情報','確認状態','登録日時'],q=v=>`"${String(v??'').replaceAll('"','""')}"`,csv='\ufeff'+[h,...a.map(x=>[x.isbn,x.title,x.author,x.publisher,x.publishedDate,x.status,x.at])].map(r=>r.map(q).join(',')).join('\r\n'),u=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),l=document.createElement('a');l.href=u;l.download='蔵書マスター整備結果.csv';l.click()}
+setTimeout(()=>{$('#mcIsbnGo').onclick=()=>mcISBN($('#mcIsbn').value);$('#mcTitleGo').onclick=mcTitle;$('#mcCam').onclick=mcCam;$('#mcStop').onclick=()=>{if(mcCtl)mcCtl.stop();mcCtl=null};$('#mcExport').onclick=mcExport;$('#mcClear').onclick=()=>{if(confirm('整備リストだけを消去しますか？')){localStorage.removeItem(MC40);mcR()}};mcR()},600);

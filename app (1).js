@@ -152,7 +152,7 @@ function priceDecision(hit,store,max){let pairs=[['BOOKOFF',store],['メルカ�
 function renderScanProgress(){let isbn=books.filter(b=>b.isbn).length,no=books.filter(b=>b.noCode).length,pending=books.filter(b=>!b.isbn&&!b.noCode).length;let el=$('#scanProgress');if(el)el.innerHTML=`<b>${books.length}冊中 ${isbn}冊 ISBN登録済</b> ／ ${no}冊 コードなし確認済 ／ <b>${pending}冊 未確認</b>`}
 function safeCandidate(info){let title=norm(info.title),author=norm(info.author),publisher=norm(info.publisher);let c=books.filter(b=>b.owned===true&&!b.isbn&&!b.noCode&&norm(b.title)===title);if(c.length===1)return c[0];let scored=books.filter(b=>b.owned===true&&!b.isbn&&!b.noCode).map(b=>{let score=0;if(title&&norm(b.title)===title)score+=6;if(author&&norm(b.author)&&author.includes(norm(b.author)))score+=2;if(publisher&&norm(b.publisher)===publisher)score+=2;return{b,score}}).filter(x=>x.score>=8).sort((a,b)=>b.score-a.score);return scored.length===1?scored[0].b:null}
 function enrichOwnedBook(b,info){if(!b||!info)return b;b.isbn=info.isbn||b.isbn;b.title=info.title||b.title;b.author=info.author||b.author;b.publisher=info.publisher||b.publisher;b.publishedDate=info.publishedDate||b.publishedDate;b.listPrice=info.listPrice||b.listPrice;b.codeStatus='isbn-verified';b.isbnCheckedAt=new Date().toISOString();save();return b}
-async function findBook(code){try{let{hit,info}=await lookup(code);if(!hit)hit=linkScannedIsbn(info);
+async function findBook(code){try{let{hit,info}=await lookup(code);if(masterScanActive()){addMasterScan(info,code);$('#scanout').innerHTML=`<div class=result><h3>${esc(info.title||'書誌情報なし')}</h3><b>🧾 整備用に保存しました</b><p>${esc(info.author)}<br>${esc(info.publisher)}<br>ISBN：${esc(info.isbn||code)}</p><small>現在の本棚は変更していません。</small></div>`;if($('#bulkMode')?.checked)setTimeout(()=>startScanner(),650);return;}if(!hit)hit=linkScannedIsbn(info);
 let autoAdded=false;
 if(!hit && $('#scanAddMode')?.checked && info?.title){
   hit={...info,id:crypto.randomUUID(),owned:true,readCount:0,usedMin:null,usedMax:null,genreTags:[],kumonLevel:'',codeStatus:'isbn-verified',isbnCheckedAt:new Date().toISOString(),addedBy:'scan'};
@@ -268,7 +268,7 @@ function renderAnalysis(){
 function ageAtLabel(m){return`${Math.floor(m/12)}歳${m%12}か月`}
 $('#ageFilter').onchange=renderAnalysis;$('#refreshAnalysis').onclick=renderAnalysis;
 
-$('#saveSettings').onclick=()=>{localStorage.setItem('birthDate',$('#birthDate').value||'2025-04-05');let l=readLog();l.forEach(x=>x.ageMonths=ageAt(x.date).months);saveReadLog(l);renderAnalysis();alert('保存しました')};
+$('#saveSettings').onclick=()=>{saveProfile();localStorage.setItem('birthDate',$('#birthDate').value||'2025-04-05');let l=readLog();l.forEach(x=>x.ageMonths=ageAt(x.date).months);saveReadLog(l);renderAnalysis();alert('保存しました')};
 $('#backup').onclick=()=>{let payload={app:'けんいちくんの本棚',version:'1.0',exportedAt:new Date().toISOString(),books,mieteLog:readLog(),kumonMaster:kumonMaster(),birthDate:birth()};let blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`kenichi-books-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('#backupout').textContent='バックアップを書き出しました。'};
 $('#restore').onchange=async e=>{try{let j=JSON.parse(await e.target.files[0].text()),r=Array.isArray(j)?j:j.books;if(!Array.isArray(r))throw Error('本棚データがありません');books=r;save();if(j.mieteLog)saveReadLog(j.mieteLog);if(j.kumonMaster)saveKumon(j.kumonMaster);if(j.birthDate)localStorage.setItem('birthDate',j.birthDate);render();renderAnalysis();$('#backupout').textContent='復元しました。'}catch(err){$('#backupout').textContent='復元できませんでした: '+err.message}};
 
@@ -464,4 +464,160 @@ function classifyMieteTitle(title){
 }
 
 init().then(async()=>{await applyLibraryMetadata();await mergeBundledMiete();await syncOfficialKumon2026(false);render();renderAnalysis();renderMieteRank();integratedSummary();renderLibraryEnrichStatus();integratedSummary()});setTimeout(renderScanProgress,0);
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=34',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=40',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
+
+
+// ===== v35 sales foundation =====
+const IMPORT_SOURCE={MIETE_PDF:'miete_pdf',MIETE_API:'miete_api',MANUAL:'manual',OTHER:'other'};
+function getProfile(){try{return JSON.parse(localStorage.getItem('childProfile')||'{}')}catch{return {}}}
+function saveProfile(){
+ const p={name:$('#childName')?.value||'',birthDate:$('#birthDate')?.value||'',gender:$('#childGender')?.value||''};
+ localStorage.setItem('childProfile',JSON.stringify(p)); return p;
+}
+function loadProfile(){
+ const p=getProfile();
+ if($('#childName'))$('#childName').value=p.name||'';
+ if($('#childGender'))$('#childGender').value=p.gender||'';
+ if(p.birthDate&&$('#birthDate'))$('#birthDate').value=p.birthDate;
+}
+function normalizeReadSource(){
+ const log=readLog();
+ let changed=false;
+ for(const r of log){if(!r.source){r.source=IMPORT_SOURCE.MIETE_PDF;changed=true}}
+ if(changed)localStorage.setItem('mieteLog',JSON.stringify(log));
+}
+function bookLine(b){return `<div class="bookline" data-id="${esc(b.id||'')}"><b>${esc(b.title||'（無題）')}</b>｜${esc(b.author||'作者未登録')}｜${esc(b.publisher||'出版社未登録')}</div>`}
+function renderCompactOwned(){const el=$('#compactOwnedList');if(el)el.innerHTML=books.filter(b=>b.owned!==false).sort(cmp).map(bookLine).join('')}
+function renderCompactMissing(){
+ const el=$('#compactMissingList'); if(!el)return;
+ const a=books.filter(b=>b.owned===false).sort(cmp);
+ el.innerHTML=a.map(bookLine).join('')||'<p class="muted">未所有本データを読み込み後に表示します。</p>';
+}
+function genreOptions(){
+ const s=new Set();
+ for(const b of books){for(const g of (b.genreTags||[]))if(g)s.add(g);if(b.genre)s.add(b.genre)}
+ return [...s].sort((a,b)=>a.localeCompare(b,'ja')).slice(0,80);
+}
+function getGenrePrefs(){try{return JSON.parse(localStorage.getItem('genrePrefs')||'{"low":[],"grow":[]}')}catch{return {low:[],grow:[]}}}
+function renderGenrePrefs(){
+ const el=$('#genrePreferenceSettings');if(!el)return;
+ const p=getGenrePrefs(),opts=genreOptions();
+ const sel=(id,label,val)=>`<label>${label}<select id="${id}"><option value="">未設定</option>${opts.map(x=>`<option ${x===val?'selected':''}>${esc(x)}</option>`).join('')}</select></label>`;
+ el.innerHTML=sel('lowGenre1','少ないジャンル①',p.low?.[0])+sel('lowGenre2','少ないジャンル②',p.low?.[1])+sel('growGenre1','伸ばしたいジャンル①',p.grow?.[0])+sel('growGenre2','伸ばしたいジャンル②',p.grow?.[1]);
+}
+function saveGenrePrefs(){
+ const low=[$('#lowGenre1')?.value,$('#lowGenre2')?.value].filter(Boolean).slice(0,2);
+ const grow=[$('#growGenre1')?.value,$('#growGenre2')?.value].filter(Boolean).slice(0,2);
+ localStorage.setItem('genrePrefs',JSON.stringify({low:[...new Set(low)],grow:[...new Set(grow)]}));
+ renderRecommendationSummary();
+}
+function renderRecommendationSummary(){
+ const el=$('#recommendationSummary');if(!el)return;
+ const p=getGenrePrefs(), prof=getProfile();
+ el.innerHTML=`<p><b>${esc(prof.name||'お子さん')}</b>への推薦条件</p><p>少ない：${esc((p.low||[]).join('・')||'未設定')}<br>伸ばしたい：${esc((p.grow||[]).join('・')||'未設定')}</p><p class="muted">年齢/月齢 × ジャンル × 未所有 × くもん推薦図書 × 家庭保育園の根拠確認済みデータ、の順で候補を絞る骨格です。</p>`;
+}
+function pie(canvasId,data){
+ const c=document.getElementById(canvasId); if(!c||!c.getContext)return;
+ const ctx=c.getContext('2d'), entries=Object.entries(data||{}).filter(x=>x[1]>0), total=entries.reduce((s,x)=>s+x[1],0);
+ ctx.clearRect(0,0,c.width,c.height); if(!total){ctx.fillText('データなし',120,160);return}
+ let a=-Math.PI/2; const colors=['#b96f63','#d89a7c','#e9bf91','#8da399','#7f8fa6','#b5a6bd','#c9b458','#93a8ac','#d6a2ad','#9db17c'];
+ entries.forEach(([k,v],i)=>{const z=v/total*Math.PI*2;ctx.beginPath();ctx.moveTo(160,160);ctx.arc(160,160,120,a,a+z);ctx.closePath();ctx.fillStyle=colors[i%colors.length];ctx.fill();a+=z});
+ ctx.fillStyle='#333';ctx.font='12px sans-serif';entries.slice(0,8).forEach(([k,v],i)=>ctx.fillText(`${k} ${Math.round(v/total*100)}%`,10,18+i*16));
+}
+function genreCountsOwned(){
+ const d={};books.filter(b=>b.owned!==false).forEach(b=>(b.genreTags?.length?b.genreTags:[b.genre]).filter(Boolean).forEach(g=>d[g]=(d[g]||0)+1));return d
+}
+function genreCountsRead(){
+ const d={};for(const r of readLog()){const b=books.find(x=>titleMatchKey(x.title)===titleMatchKey(r.title));if(!b)continue;for(const g of (b.genreTags?.length?b.genreTags:[b.genre]).filter(Boolean))d[g]=(d[g]||0)+(Number(r.count)||1)}return d
+}
+function renderSalesPies(){pie('genrePie',genreCountsOwned());pie('readGenrePie',genreCountsRead())}
+function setScanMode(mode){
+ const add=$('#scanAddMode'),help=$('#scanModeHelp'),head=$('#scanHeading');
+ localStorage.setItem('scanMode',mode);
+ if(mode==='shop'){if(add)add.checked=false;if(help)help.textContent='お店でチェック：所有済みか判定し、中古価格を確認します。スキャンだけでは蔵書登録しません。';if(head)head.textContent='お店で所有・価格チェック'}
+ else {if(add)add.checked=true;if(help)help.textContent='蔵書整備：スキャンした本を蔵書登録・書誌補完します。';if(head)head.textContent='ISBN・蔵書整備スキャン'}
+}
+function initSalesFoundation(){
+ loadProfile(); normalizeReadSource(); renderGenrePrefs();renderRecommendationSummary();renderSalesPies();
+ if($('#compactOwned'))$('#compactOwned').onclick=renderCompactOwned;
+ if($('#compactMissing'))$('#compactMissing').onclick=renderCompactMissing;
+ if($('#saveGenrePrefs'))$('#saveGenrePrefs').onclick=saveGenrePrefs;
+ if($('#scanModeLibrary'))$('#scanModeLibrary').onclick=()=>setScanMode('library');
+ if($('#scanModeShop'))$('#scanModeShop').onclick=()=>setScanMode('shop');
+ setScanMode(localStorage.getItem('scanMode')||'library');
+}
+setTimeout(initSalesFoundation,400);
+
+
+// ===== v36 recommendation + library handoff =====
+function childAgeMonths(){
+ const d=$('#birthDate')?.value||getProfile().birthDate;if(!d)return null;
+ const b=new Date(d+'T00:00:00'),n=new Date();return Math.max(0,(n.getFullYear()-b.getFullYear())*12+n.getMonth()-b.getMonth()-(n.getDate()<b.getDate()?1:0))
+}
+function recommendationCandidates(){
+ const prefs=getGenrePrefs(), wanted=[...(prefs.low||[]),...(prefs.grow||[])];
+ const age=childAgeMonths();
+ let pool=books.filter(b=>b.owned===false);
+ return pool.map(b=>{
+   const gs=(b.genreTags?.length?b.genreTags:[b.genre]).filter(Boolean);
+   let score=0,reasons=[];
+   for(const g of wanted)if(gs.includes(g)){score+=4;reasons.push(g)}
+   if(b.kumonLevel){score+=2;reasons.push('くもん推薦図書')}
+   if(b.kateiHoikuenRecommended){score+=2;reasons.push('家庭保育園・根拠確認済み')}
+   if(age!=null && b.ageMinMonths!=null && age>=b.ageMinMonths && (b.ageMaxMonths==null||age<=b.ageMaxMonths)){score+=3;reasons.push('現在の月齢に対応')}
+   return {b,score,reasons:[...new Set(reasons)]}
+ }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score||cmp(a.b,b.b)).slice(0,20)
+}
+function librarySearchUrl(b){
+ const cfg=localStorage.getItem('librarySearchBase')||'';
+ if(!cfg)return '';
+ const q=b.isbn||b.title||'';
+ try{const u=new URL(cfg);u.searchParams.set('q',q);return u.toString()}catch{return cfg}
+}
+function renderRecommendations(){
+ const el=$('#recommendationList');if(!el)return;
+ const a=recommendationCandidates(),lib=localStorage.getItem('libraryName')||'登録した図書館';
+ if(!a.length){el.innerHTML='<p class="muted">条件に合う未所有本がまだありません。ジャンル設定または未所有本データを確認してください。</p>';return}
+ el.innerHTML=a.map(({b,reasons})=>`<div class="recbook"><b>${esc(b.title)}</b><br><span>${esc(b.author||'作者未登録')}｜${esc(b.publisher||'出版社未登録')}</span><br><small>${esc(reasons.join('・'))}</small>${librarySearchUrl(b)?`<br><a target="_blank" rel="noopener" href="${esc(librarySearchUrl(b))}">${esc(lib)}で探す・予約へ</a>`:''}</div>`).join('')
+}
+function loadLibrarySettings(){const e=$('#librarySearchBase'),n=$('#libraryName');if(e)e.value=localStorage.getItem('librarySearchBase')||'';if(n)n.value=localStorage.getItem('libraryName')||''}
+function saveLibrarySettings(){localStorage.setItem('librarySearchBase',$('#librarySearchBase')?.value.trim()||'');localStorage.setItem('libraryName',$('#libraryName')?.value.trim()||'');renderRecommendations()}
+setTimeout(()=>{
+ loadLibrarySettings();
+ if($('#makeRecommendations'))$('#makeRecommendations').onclick=renderRecommendations;
+ if($('#saveLibrarySettings'))$('#saveLibrarySettings').onclick=saveLibrarySettings;
+},500);
+
+
+// ===== v38 verified book-master enrichment =====
+function renderMasterQuality(){
+ const el=$('#masterQuality');if(!el)return;
+ const owned=books.filter(b=>b.owned!==false), n=owned.length||1;
+ const c=f=>owned.filter(b=>String(b[f]||'').trim()).length;
+ el.textContent=`書誌整備：作者 ${c('author')}/${owned.length}｜出版社 ${c('publisher')}/${owned.length}｜ISBN ${c('isbn')}/${owned.length}`;
+}
+setTimeout(renderMasterQuality,650);
+
+
+// ===== v39 isolated master-scan workspace =====
+const MASTER_SCAN_KEY='masterScanWorkspace_v1';
+function masterScans(){try{return JSON.parse(localStorage.getItem(MASTER_SCAN_KEY)||'[]')}catch{return []}}
+function saveMasterScans(a){localStorage.setItem(MASTER_SCAN_KEY,JSON.stringify(a))}
+function masterScanActive(){return localStorage.getItem('scanMode')==='master'}
+function renderMasterScans(){const el=$('#masterScanList'),st=$('#masterScanStatus');if(!el||!st)return;const a=masterScans();st.textContent=`整備用スキャン：${a.length}件（本棚には加算されません）`;el.innerHTML=a.slice().reverse().map(x=>`<div class="bookline"><b>${esc(x.title||'書誌未取得')}</b>｜${esc(x.isbn)}｜${esc(x.author||'作者未取得')}｜${esc(x.publisher||'出版社未取得')}</div>`).join('')}
+function setMasterScanMode(){localStorage.setItem('scanMode','master');const a=$('#scanAddMode');if(a)a.checked=false;const h=$('#scanModeHelp');if(h)h.textContent='整備用：現物ISBNと取得書誌を別領域に保存します。現在の本棚は変更しません。';renderMasterScans()}
+function addMasterScan(info,code){const isbn=String(info?.isbn||code||'').replace(/\D/g,'');if(!isbn)return;const a=masterScans(),o=a.find(x=>x.isbn===isbn),r={isbn,title:info?.title||'',author:info?.author||'',publisher:info?.publisher||'',publishedDate:info?.publishedDate||'',scannedAt:new Date().toISOString(),status:'現物ISBNスキャン'};if(o)Object.assign(o,r);else a.push(r);saveMasterScans(a);renderMasterScans()}
+function exportMasterScans(){const a=masterScans(),h=['ISBN-13','取得タイトル','作者','出版社','発行情報','スキャン日時','確認状態'],q=v=>`"${String(v??'').replaceAll('"','""')}"`,csv='\ufeff'+[h,...a.map(x=>[x.isbn,x.title,x.author,x.publisher,x.publishedDate,x.scannedAt,x.status])].map(r=>r.map(q).join(',')).join('\r\n'),b=new Blob([csv],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(b),ln=document.createElement('a');ln.href=u;ln.download='蔵書マスター整備スキャン結果.csv';ln.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+function clearMasterScans(){if(!confirm('整備用スキャン結果だけを全消去します。現在の本棚は変更しません。よろしいですか？'))return;localStorage.removeItem(MASTER_SCAN_KEY);renderMasterScans()}
+setTimeout(()=>{if($('#masterScanMode'))$('#masterScanMode').onclick=setMasterScanMode;if($('#masterScanExport'))$('#masterScanExport').onclick=exportMasterScans;if($('#masterScanClear'))$('#masterScanClear').onclick=clearMasterScans;renderMasterScans()},550);
+
+
+const MC40='masterCatalog_v40';let mcCtl=null;
+const mcA=()=>{try{return JSON.parse(localStorage.getItem(MC40)||'[]')}catch{return[]}},mcS=a=>{localStorage.setItem(MC40,JSON.stringify(a));mcR()},mcM=s=>$('#mcMsg').textContent=s;
+function mcR(){const a=mcA();$('#mcCount').textContent=a.length;$('#mcList').innerHTML=a.slice().reverse().map(x=>`<div class=bookline><b>${esc(x.title||'タイトル未取得')}</b>｜${esc(x.author||'作者未取得')}｜${esc(x.publisher||'出版社未取得')}<br><small>${x.isbn?'ISBN '+esc(x.isbn):'現物ISBNなし・タイトル照合'}｜${esc(x.status)}</small></div>`).join('')}
+function mcAdd(x){let a=mcA(),o=x.isbn?a.find(y=>y.isbn===x.isbn):null;o?Object.assign(o,x):a.push(x);mcS(a)}
+async function mcISBN(raw){let code=String(raw||'').replace(/\D/g,'');if(code.length!==13)return mcM('ISBN-13を確認してください。');try{mcM('検索中…');let r=await lookup(code),i=r.info||{};mcAdd({isbn:i.isbn||code,title:i.title||'',author:i.author||'',publisher:i.publisher||'',publishedDate:i.publishedDate||'',status:'現物ISBN確認済',at:new Date().toISOString()});mcM('整備リストへ自動登録しました。')}catch(e){mcM('検索エラー：'+e.message)}}
+async function mcTitle(){let q=$('#mcTitle').value.trim(),el=$('#mcCandidates');if(!q)return;mcM('候補検索中…');try{let r=await fetch('https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent('intitle:'+q)+'&maxResults=8&printType=books'),j=await r.json(),c=(j.items||[]).map(x=>x.volumeInfo||{}).filter(x=>x.title);el.innerHTML=c.map((v,n)=>`<div class=candidate><b>${esc(v.title)}</b><br>${esc((v.authors||[]).join('・')||'作者不明')}｜${esc(v.publisher||'出版社不明')}｜${esc(v.publishedDate||'発行年不明')}<br><button data-n=${n}>この候補を選ぶ</button></div>`).join('')||'候補が見つかりません';el.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{let v=c[+b.dataset.n];mcAdd({isbn:'',title:v.title,author:(v.authors||[]).join('・'),publisher:v.publisher||'',publishedDate:v.publishedDate||'',status:'タイトル候補から選択・版要確認',at:new Date().toISOString()});el.innerHTML='';mcM('整備リストへ登録しました。')})}catch(e){mcM('検索エラー：'+e.message)}}
+async function mcCam(){try{let r=new ZXingBrowser.BrowserMultiFormatReader();mcCtl=await r.decodeFromVideoDevice(undefined,'mcVideo',(res,err,ctl)=>{if(res&&/^97[89]\d{10}$/.test(res.getText())){ctl.stop();mcCtl=null;mcISBN(res.getText())}});mcM('ISBNバーコードを映してください。')}catch(e){mcM('カメラエラー：'+e.message)}}
+function mcExport(){let a=mcA(),h=['ISBN-13','タイトル','作者','出版社','発行情報','確認状態','登録日時'],q=v=>`"${String(v??'').replaceAll('"','""')}"`,csv='\ufeff'+[h,...a.map(x=>[x.isbn,x.title,x.author,x.publisher,x.publishedDate,x.status,x.at])].map(r=>r.map(q).join(',')).join('\r\n'),u=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),l=document.createElement('a');l.href=u;l.download='蔵書マスター整備結果.csv';l.click()}
+setTimeout(()=>{$('#mcIsbnGo').onclick=()=>mcISBN($('#mcIsbn').value);$('#mcTitleGo').onclick=mcTitle;$('#mcCam').onclick=mcCam;$('#mcStop').onclick=()=>{if(mcCtl)mcCtl.stop();mcCtl=null};$('#mcExport').onclick=mcExport;$('#mcClear').onclick=()=>{if(confirm('整備リストだけを消去しますか？')){localStorage.removeItem(MC40);mcR()}};mcR()},600);
