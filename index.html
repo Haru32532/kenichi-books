@@ -1,85 +1,21 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>けんいちくんの本棚</title>
-<meta name="theme-color" content="#b96f63"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="けんいち本棚">
-<link rel="apple-touch-icon" href="/icon-180.png"><link rel="manifest" href="/manifest.webmanifest"><link rel="stylesheet" href="/style.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs" type="module"></script>
-<script src="https://unpkg.com/@zxing/browser@0.1.5"></script></head><body>
-<header><div><b>けんいちくんの本棚</b><small>蔵書・BOOKOFF・くもん・読み聞かせ</small></div><button id="pdf">PDF</button></header>
-<nav><button data-tab="library" class="on">本棚</button><button data-tab="missing">おすすめ</button><button data-tab="miete">読書記録</button><button data-tab="analysis">分析</button><button data-tab="scan">スキャン</button><button data-tab="share">設定</button><button data-tab="ai">AI</button><button data-tab="overseas">マイ機能</button></nav><main>
-<section id="library" class="tab on"><div id="stats"></div>
-<div class="panel"><b>一覧表示</b><p class="muted">タイトル｜作者｜出版社を1行で確認できます。</p>
-<button id="compactOwned">蔵書を一覧表示</button><div id="compactOwnedList"></div></div>
-<div class="panel"><b>📚 所蔵本の書誌補完</b>
-<p class="muted">現在のiPhone蔵書（スキャン追加分を含む）は消さずに保持します。既存データの空欄だけを補完します。</p>
-<div id="libraryEnrichStatus"></div>
-<div class="filters">
-<select id="bibMissingFilter">
-<option value="">書誌：すべて</option>
-<option value="author">作者未登録</option>
-<option value="illustrator">絵・イラスト未登録</option>
-<option value="translator">訳・再話未登録</option>
-<option value="publisher">出版社未登録</option>
-<option value="publishedDate">発行情報未登録</option>
-<option value="isbn">ISBN未登録</option>
-</select>
-<button id="nextBibMissing" type="button">次の未整備本を開く</button>
-</div>
-<button id="enrichLibrary" type="button">作者・出版社を50冊ずつ補完</button>
-<button id="exportBeforeEnrich" type="button">現在の蔵書をバックアップ</button>
-</div><div class="tools"><input id="q" placeholder="検索"><select id="sort"><option value="title">タイトル順</option><option value="author">作者順</option><option value="publisher">出版社順</option><option value="readDesc">読み聞かせ回数順</option><option value="priceAsc">中古相場 安い順</option><option value="rarity">レア度順</option><option value="priority">優先度順</option></select><select id="genreFilter"><option value="">全ジャンル</option><option>くもん5A</option><option>くもん4A</option><option>くもん3A</option><option>くもん2A</option><option>くもんA</option><option>くもんB以上</option><option>家庭保育園</option><option>季節</option><option>図鑑</option><option>昔話</option><option>名作</option><option>文化</option><option>自然科学</option><option>算数</option><option>英語</option></select><button id="add">＋本</button></div><div id="list"></div></section>
-<section id="scan" class="tab"><h2>スキャン</h2>
-<div class="panel"><button id="scanModeLibrary" type="button">📚 蔵書整備</button> <button id="scanModeShop" type="button">🏪 お店でチェック</button>
-<p id="scanModeHelp" class="muted">蔵書整備：スキャンした本を蔵書登録・書誌補完します。</p></div>
-<section class="panel"><h2>🧾 蔵書マスター整備・診断 v44</h2><p>通常の本棚とは完全に別です。</p><button id="dCam">ISBNをカメラで読む</button><button id="dStop">停止</button><video id="dVideo" playsinline muted style="width:100%;max-height:280px;background:#111"></video><div class="mc-diag"><b>診断モード v44</b><br>読み取ったコード：<span id="dCode">未読取</span><br>ISBN判定：<span id="dIsbn">未判定</span><br>処理段階：<span id="dStage">待機中</span><div id="dSources"></div></div><div id="dResult"></div></section><h3 id="scanHeading">ISBN・蔵書スキャン</h3><p>通常検索と、手持ちの本を次々スキャンして書誌情報を補完する「蔵書一括モード」を切り替えられます。Benesse・Baby Kumon・古書などコードがない本は手入力で「コードなし確認済み」にできます。</p><div class="panel"><label><label><input id="scanAddMode" type="checkbox" checked> 蔵書追加モード（スキャンした本を自動登録）</label><br>
-<input id="bulkMode" type="checkbox"> <b>📚 蔵書一括スキャンモード</b></label><p class="muted">ONにすると、既存蔵書へISBN・正式タイトル・作者・出版社・発売日・定価を自動補完し、そのまま次の本を読み取ります。</p><div id="scanProgress"></div><button id="showNoIsbn">ISBN未登録の本を見る</button> <button id="manualNoCode">コードなし本を手入力</button></div><video id="video" playsinline></video><p><button id="camera">カメラ開始</button> <button id="stopCamera">停止</button></p><div class="price-search"><input id="isbn" inputmode="numeric" placeholder="ISBN-13（978/979）またはISBN-10"><input id="storePrice" inputmode="numeric" type="number" min="0" placeholder="BOOKOFF店頭価格"><input id="maxPrice" inputmode="numeric" type="number" min="0" placeholder="購入上限（任意）"><button id="lookup">書誌・価格を確認</button></div><div id="scanout"></div></section>
-<section id="missing" class="tab"><h2>おすすめ・読みたい本</h2>
-<div class="panel"><b>おすすめ設定</b>
-<p class="muted">少ないジャンル2つ、伸ばしたいジャンル2つまで設定できます。</p>
-<div id="genrePreferenceSettings"></div><button id="saveGenrePrefs">設定を保存</button>
-<div id="recommendationSummary"></div>
-<div id="masterQuality" class="muted"></div>
-<button id="makeRecommendations" type="button">📚 おすすめ本を表示</button>
-<div id="recommendationList"></div></div>
-<div class="panel"><b>一覧表示</b><p class="muted">タイトル｜作者｜出版社を1行で確認できます。</p>
-<button id="compactMissing">未所有を一覧表示</button><div id="compactMissingList"></div></div><div class="panel"><h3>くもん推薦図書</h3><div class="tools"><select id="kumonYear"></select><select id="kumonLevelFilter"><option value="">全級</option><option>5A</option><option>4A</option><option>3A</option><option>2A</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option><option>I</option></select><button id="showKumonMissing">未所有を表示</button><button id="syncKumonOfficial" type="button">2026公式650冊を同期</button></div>
-<div id="kumonOfficialStatus" class="muted">2026公式一覧：同期確認中…</div><div class="tools missing-tools">
-  <select id="missingSort" aria-label="並び順">
-    <option value="title">タイトル あいうえお順</option>
-    <option value="publisher">出版社別 あいうえお順</option>
-  </select>
-  <input id="missingAuthorSearch" type="search" placeholder="作者名で検索" autocomplete="off"><select id="missingRarityFilter" aria-label="レア度で絞り込み">
-<option value="">レア度：すべて</option><option value="A">レア度A</option>
-<option value="B">レア度B</option><option value="C">レア度C</option>
-<option value="none">レア度未設定</option></select>
-  <button id="clearMissingSearch" type="button">検索解除</button>
-</div><p>年度更新PDFを読み込むと前年度と比較し「2027年追加」「2027年削除」「級変更」を保存します。</p><input type="file" id="kumonPdf" accept="application/pdf"><input id="kumonImportYear" type="number" min="2020" max="2100" placeholder="PDFの年度 例: 2027"><button id="importKumon">PDFを解析</button><div id="kumonDiff"></div></div><div class="panel"><h3>その他の目標リスト</h3><input type="file" id="target" accept=".csv,.json"><div id="miss"></div></div></section>
-<section id="miete" class="tab"><h2>読み聞かせ記録</h2><p>現在はミーテPDFを取り込みます。内部では取込元を分離して保存し、将来API連携へ差し替えられる設計です。</p>
-<div class="panel"><b>取込元</b>：ミーテPDF <span class="muted">（将来：ミーテAPI / その他サービス）</span></div><input type="file" id="mietefile" accept="application/pdf" multiple><button id="importMiete">PDFを取り込む</button><div id="mieteout"></div><div id="mieterank"></div></section>
-<section id="analysis" class="tab"><h2>読書・蔵書分析</h2><div class="tools"><select id="ageFilter"><option value="all">全期間</option></select><button id="refreshAnalysis">更新</button></div><div id="ranking"></div><h3>ジャンル別 蔵書バランス</h3><canvas id="genrePie" width="320" height="320"></canvas><div id="genreChart" class="bars"></div>
-<h3>ジャンル別 読み聞かせ回数</h3><canvas id="readGenrePie" width="320" height="320"></canvas><div id="readGenreChart" class="bars"></div><div id="genreAdvice"></div></section>
-<section id="ai" class="tab"><h2>本棚AI相談</h2><p>蔵書・くもん推薦図書・ミーテの読み聞かせ履歴・ジャンル情報を使って相談できます。</p><textarea id="aiq" placeholder="例：1歳5か月で最近あまり読んでいないジャンルは？"></textarea><button id="ask">相談</button><div id="aiStatus" class="muted"></div><pre id="aiout"></pre></section>
-<section id="overseas" class="tab"><div class="panel">
-<h2>海外赴任準備の本</h2><div id="integratedStatus" class="panel"></div>
-<p class="muted">季節・日本文化・昔話・自然・科学・図鑑・音楽・日本語・数などを、現在の蔵書と照合して不足候補を表示します。</p>
-<div class="tools">
-<select id="overseasCategory"><option value="">全ジャンル</option></select>
-<select id="overseasPriority"><option value="">全優先度</option><option value="S">S</option><option value="A">A</option><option value="B">B</option></select>
-<button id="showOverseas">不足候補を表示</button>
-</div>
-<div id="overseasSummary"></div><div id="overseasList"></div>
-<h3>ChatGPT連動</h3>
-<p class="muted">現在の蔵書・読み聞かせ傾向・不足ジャンルを使って、追加候補をAIに相談します。</p>
-<button id="askOverseasAI">ChatGPTで「今買う本」を優先判定</button>
-<div id="overseasAI"></div>
-</div></section>
-<section id="share" class="tab"><h2>設定</h2>
-<div class="panel"><h3>利用する図書館</h3>
-<p class="muted">おすすめ本から図書館検索へ進むための設定です。予約確定は各図書館サイトで行います。</p>
-<label>利用する図書館名 <input id="libraryName" placeholder="例：さいたま市図書館"></label>
-<label>図書館検索ページ <input id="librarySearchBase" placeholder="図書館OPACの検索ページURL（任意）"></label>
-<button id="saveLibrarySettings" type="button">図書館設定を保存</button></div><h2>家族共有・バックアップ</h2><div class="backup-box"><h3>バックアップ</h3><p><button id="backup">バックアップを書き出す</button> <label class="filebtn">復元<input type="file" id="restore" accept=".json,application/json"></label></p><div id="backupout"></div></div><h3>お子さんのプロフィール</h3>
-<label>名前・ニックネーム <input id="childName" placeholder="例：けんちゃん"></label>
-<label>生年月日 <input id="birthDate" type="date" value="2025-04-05"></label>
-<label>性別（任意） <select id="childGender"><option value="">未設定</option><option value="boy">男の子</option><option value="girl">女の子</option><option value="other">その他・回答しない</option></select></label><button id="saveSettings">保存</button><hr><input id="sburl" placeholder="Supabase URL"><input id="sbkey" placeholder="Anon key"><input id="email" type="email" placeholder="メール"><input id="password" type="password" placeholder="パスワード"><p><button id="signup">登録</button><button id="login">ログイン</button><button id="sync">同期</button></p><div id="syncout"></div></section>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>けんちゃんの本棚｜読書伴走</title><link rel="manifest" href="/manifest.webmanifest"><link rel="stylesheet" href="/style.css"></head>
+<body><header><div><b>けんちゃんの本棚</b><small>0歳からの読み聞かせ伴走</small></div></header>
+<main>
+<section id="home" class="page active">
+ <h1>今月の読み聞かせ</h1>
+ <div class="card hero"><div class="row"><div><small>累計</small><strong id="totalReads">0回</strong></div><div><small>目標</small><strong id="goalTotal">30,000回</strong></div></div>
+ <div class="bar"><i id="goalBar"></i></div><p id="goalPace"></p><button data-go="settings">目標・読む曜日を設定</button></div>
+ <div class="card"><h2>今月の推奨図書</h2><ul id="monthlyBooks"></ul><div class="twocol"><div><small>コンプリート</small><b id="bookProgress">0 / 0冊</b></div><div><small>繰り返し</small><b id="repeatProgress">0回</b></div></div><button data-go="recommend">推奨図書を編集</button></div>
+ <div class="card"><h2>今月のジャンル</h2><div id="genreBars"></div><p id="genreInsight"></p><button data-go="analysis">詳しく見る</button></div>
+ <div class="card"><h2>今月の振り返り</h2><div id="reflection"></div></div>
+</section>
+<section id="bookshelf" class="page"><h1>本棚</h1><div class="card"><input id="bookSearch" placeholder="タイトル・作者・ISBNで検索"><p id="bookCount"></p><div id="bookList"></div></div></section>
+<section id="records" class="page"><h1>読書記録</h1><div class="card"><h2>ミーテPDF</h2><p>PDF取込は独立アダプターとして接続します。将来API連携へ差し替え可能です。</p><input type="file" id="mietePdf" accept="application/pdf"><button id="pdfStub">取込内容を確認</button><p id="pdfMsg"></p></div><div class="card"><h2>手入力</h2><input id="manualTitle" placeholder="本のタイトル"><input id="manualCount" type="number" min="1" value="1"><button id="addRead">読み聞かせを追加</button></div></section>
+<section id="recommend" class="page"><h1>おすすめ</h1><div class="card"><h2>今月伸ばしたいジャンル</h2><div id="focusGenres"></div><p>少ないジャンルと、親が伸ばしたいジャンルを分けて扱います。</p></div><div class="card"><h2>今月の推奨図書</h2><div id="recEditor"></div></div></section>
+<section id="analysis" class="page"><h1>分析</h1><div class="card"><h2>ジャンル別読み聞かせ</h2><div id="analysisGenres"></div></div><div class="card"><h2>冊数と回数</h2><div id="breadthDepth"></div></div></section>
+<section id="scan" class="page"><h1>スキャン</h1><div class="tabs"><button id="modeMaster" class="on">蔵書マスター整備</button><button id="modeShop">お店でチェック</button></div><div class="card"><p>上段978/979＝ISBN、下段192＝Cコード・出版分類・本体価格。どちらを先に読んでも保持します。</p><video id="video" playsinline muted></video><button id="startScan">カメラで読む</button><button id="stopScan">停止</button><div id="scanState"></div><div id="scanResult"></div></div></section>
+<section id="settings" class="page"><h1>設定</h1><div class="card"><h2>子ども</h2><label>ニックネーム<input id="childName"></label><label>生年月日<input id="birthDate" type="date"></label></div><div class="card"><h2>読み聞かせ目標</h2><label>目標回数<input id="goalInput" type="number"></label><label>目標日<input id="goalDate" type="date"></label><h3>読む日</h3><label><input id="wk" type="checkbox"> 平日（月〜金・祝日除外）</label><label><input id="sat" type="checkbox"> 土曜</label><label><input id="hol" type="checkbox"> 日曜・祝日</label><button id="saveSettings">保存</button></div><div class="card"><h2>利用図書館</h2><input id="libraryName" placeholder="例：さいたま市図書館"><button id="saveLibrary">保存</button></div></section>
 </main>
-<dialog id="edit"><form><h3>本の情報</h3><input name="title" placeholder="タイトル" required><input name="author" placeholder="作者"><input name="illustrator" placeholder="絵・イラスト"><input name="translator" placeholder="訳・再話"><input name="publisher" placeholder="出版社"><input name="isbn" placeholder="ISBN/JAN"><label><input name="noCode" type="checkbox"> コードなし確認済み（Benesse・Baby Kumon・古書など）</label><input name="publishedDate" placeholder="発売日"><input name="listPrice" type="number" placeholder="定価（税込）"><select name="kumonLevel"><option value="">くもん区分 未設定</option><option>5A</option><option>4A</option><option>3A</option><option>2A</option><option>A</option><option>B</option><option>C</option></select><input name="genreTagsText" placeholder="ジャンル（例：図鑑,自然科学）"><input name="usedMin" type="number" placeholder="中古相場 最安"><input name="usedMax" type="number" placeholder="中古相場 最高"><input name="mercariPrice" type="number" placeholder="メルカリ"><input name="rakumaPrice" type="number" placeholder="ラクマ"><input name="valuebooksPrice" type="number" placeholder="VALUE BOOKS"><select name="rarity"><option value="">レア度</option><option>S</option><option>A</option><option>B</option><option>C</option></select><select name="priority"><option value="">優先度</option><option>S</option><option>A</option><option>B</option><option>C</option></select><p><button type="button" id="cancel">取消</button><button type="submit">保存</button></p></form></dialog>
-<script src="/app.js?v=44"></script></body></html>
+<nav><button data-go="home">ホーム</button><button data-go="bookshelf">本棚</button><button data-go="records">読書記録</button><button data-go="recommend">おすすめ</button><button data-go="analysis">分析</button><button data-go="scan">スキャン</button></nav>
+<script src="https://unpkg.com/@zxing/browser@latest"></script><script src="/app.js?v=1"></script></body></html>

@@ -1,1 +1,1 @@
-{"name": "けんいちくんの本棚", "short_name": "けんいち本棚", "id": "/", "start_url": "/", "scope": "/", "display": "standalone", "orientation": "portrait-primary", "background_color": "#fffaf6", "theme_color": "#b96f63", "icons": [{"src": "/icon-180.png", "sizes": "180x180", "type": "image/png"}, {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}]}
+{"name": "けんちゃんの本棚｜読書伴走", "short_name": "けんちゃんの本棚", "start_url": "/", "display": "standalone", "background_color": "#faf8f3", "theme_color": "#ffffff"}
