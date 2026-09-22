@@ -464,7 +464,7 @@ function classifyMieteTitle(title){
 }
 
 init().then(async()=>{await applyLibraryMetadata();await mergeBundledMiete();await syncOfficialKumon2026(false);render();renderAnalysis();renderMieteRank();integratedSummary();renderLibraryEnrichStatus();integratedSummary()});setTimeout(renderScanProgress,0);
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=43',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=44',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
 
 
 // ===== v35 sales foundation =====
@@ -650,3 +650,8 @@ mcISBN=async function(raw){
  else{$('#mcFallbackGo').style.display='inline-block';mcM('ISBNは保持しました。タイトルを入力して候補を検索し、現物に合う候補を選んでください。')}
 };
 setTimeout(()=>{const b=$('#mcFallbackGo');if(b)b.onclick=()=>{const q=$('#mcTitle').value.trim();if(!q||!mcPhysicalIsbn)return mcM('先にISBNを読み取り、タイトルを入力してください。');mcAdd({isbn:mcPhysicalIsbn,title:q,author:'',publisher:'',publishedDate:'',source:'現物ISBN＋タイトル手入力',status:'書誌要確認',at:new Date().toISOString()});mcM('現物ISBNを保持して整備リストへ登録しました。');b.style.display='none'}},800);
+
+let dCtl=null;function d(id,v){let e=$(id);if(e)e.textContent=v}function ds(v){let e=$('#dSources');if(e)e.innerHTML+=`<div>${esc(v)}</div>`}
+async function diagCode(raw){raw=String(raw||'');let code=raw.replace(/\D/g,'');d('#dCode',raw||'空');let ok=/^97[89]\d{10}$/.test(code);d('#dIsbn',ok?'OK':'NG');if(!ok)return d('#dStage','ISBN-13ではない');d('#dStage','検索中');let b=null;try{let r=await fetch('https://api.openbd.jp/v1/get?isbn='+code,{cache:'no-store'}),j=await r.json(),s=j&&j[0]&&j[0].summary;if(s&&s.title){b={title:s.title,author:s.author||'',publisher:s.publisher||'',source:'openBD'};ds('openBD：成功')}else ds('openBD：該当なし')}catch(e){ds('openBD：失敗')}if(!b)try{let r=await fetch('https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent('isbn:'+code),{cache:'no-store'}),j=await r.json(),v=j.items&&j.items[0]&&j.items[0].volumeInfo;if(v){b={title:v.title||'',author:(v.authors||[]).join('・'),publisher:v.publisher||'',source:'Google Books'};ds('Google Books：成功')}else ds('Google Books：該当なし')}catch(e){ds('Google Books：失敗')}if(!b&&typeof MC_VERIFIED!=='undefined'&&MC_VERIFIED[code]){b=MC_VERIFIED[code];ds('確認済みフォールバック：成功')}let e=$('#dResult');if(b){e.innerHTML=`<h3>${esc(b.title||'')}</h3><div>${esc(b.author||'')}｜${esc(b.publisher||'')}</div><div>ISBN ${esc(code)}｜${esc(b.source||'')}</div>`;d('#dStage','書誌取得成功')}else{e.innerHTML='<b>書誌情報を取得できませんでした</b>';d('#dStage','書誌未取得')}}
+async function diagCam(){d('#dCode','未読取');d('#dIsbn','未判定');d('#dStage','カメラ起動中');$('#dSources').innerHTML='';try{let r=new ZXingBrowser.BrowserMultiFormatReader();dCtl=await r.decodeFromVideoDevice(undefined,'dVideo',(res,err,ctl)=>{if(res){let raw=String(res.getText()||'');d('#dCode',raw);d('#dStage','バーコード読取成功');ctl.stop();dCtl=null;diagCode(raw)}});d('#dStage','バーコード待機中')}catch(e){d('#dStage','カメラ起動失敗');ds(String(e.message||e))}}
+setTimeout(()=>{$('#dCam').onclick=diagCam;$('#dStop').onclick=()=>{if(dCtl)dCtl.stop();dCtl=null}},700);
