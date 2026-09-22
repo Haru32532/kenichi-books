@@ -9,3 +9,5 @@
 .master-scan-panel{border:2px solid #c7b08a}.master-scan-panel button{margin:4px 3px 4px 0}
 
 .master-catalog{border:2px solid #9d835d}.master-catalog input{width:100%;box-sizing:border-box;margin:6px 0}#mcVideo{width:100%;max-height:280px;background:#111}.candidate{padding:10px 0;border-bottom:1px solid #ddd}
+
+.mc-result{margin:12px 0;padding:12px;border:1px solid #bbb;border-radius:12px}.mc-result div{margin:5px 0}
