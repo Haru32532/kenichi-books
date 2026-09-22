@@ -464,7 +464,7 @@ function classifyMieteTitle(title){
 }
 
 init().then(async()=>{await applyLibraryMetadata();await mergeBundledMiete();await syncOfficialKumon2026(false);render();renderAnalysis();renderMieteRank();integratedSummary();renderLibraryEnrichStatus();integratedSummary()});setTimeout(renderScanProgress,0);
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=35',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=36',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
 
 
 // ===== v35 sales foundation =====
@@ -547,3 +547,43 @@ function initSalesFoundation(){
  setScanMode(localStorage.getItem('scanMode')||'library');
 }
 setTimeout(initSalesFoundation,400);
+
+
+// ===== v36 recommendation + library handoff =====
+function childAgeMonths(){
+ const d=$('#birthDate')?.value||getProfile().birthDate;if(!d)return null;
+ const b=new Date(d+'T00:00:00'),n=new Date();return Math.max(0,(n.getFullYear()-b.getFullYear())*12+n.getMonth()-b.getMonth()-(n.getDate()<b.getDate()?1:0))
+}
+function recommendationCandidates(){
+ const prefs=getGenrePrefs(), wanted=[...(prefs.low||[]),...(prefs.grow||[])];
+ const age=childAgeMonths();
+ let pool=books.filter(b=>b.owned===false);
+ return pool.map(b=>{
+   const gs=(b.genreTags?.length?b.genreTags:[b.genre]).filter(Boolean);
+   let score=0,reasons=[];
+   for(const g of wanted)if(gs.includes(g)){score+=4;reasons.push(g)}
+   if(b.kumonLevel){score+=2;reasons.push('くもん推薦図書')}
+   if(b.kateiHoikuenRecommended){score+=2;reasons.push('家庭保育園・根拠確認済み')}
+   if(age!=null && b.ageMinMonths!=null && age>=b.ageMinMonths && (b.ageMaxMonths==null||age<=b.ageMaxMonths)){score+=3;reasons.push('現在の月齢に対応')}
+   return {b,score,reasons:[...new Set(reasons)]}
+ }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score||cmp(a.b,b.b)).slice(0,20)
+}
+function librarySearchUrl(b){
+ const cfg=localStorage.getItem('librarySearchBase')||'';
+ if(!cfg)return '';
+ const q=b.isbn||b.title||'';
+ try{const u=new URL(cfg);u.searchParams.set('q',q);return u.toString()}catch{return cfg}
+}
+function renderRecommendations(){
+ const el=$('#recommendationList');if(!el)return;
+ const a=recommendationCandidates();
+ if(!a.length){el.innerHTML='<p class="muted">条件に合う未所有本がまだありません。ジャンル設定または未所有本データを確認してください。</p>';return}
+ el.innerHTML=a.map(({b,reasons})=>`<div class="recbook"><b>${esc(b.title)}</b><br><span>${esc(b.author||'作者未登録')}｜${esc(b.publisher||'出版社未登録')}</span><br><small>${esc(reasons.join('・'))}</small>${librarySearchUrl(b)?`<br><a target="_blank" rel="noopener" href="${esc(librarySearchUrl(b))}">図書館で検索・予約へ</a>`:''}</div>`).join('')
+}
+function loadLibrarySettings(){const e=$('#librarySearchBase');if(e)e.value=localStorage.getItem('librarySearchBase')||''}
+function saveLibrarySettings(){localStorage.setItem('librarySearchBase',$('#librarySearchBase')?.value.trim()||'');renderRecommendations()}
+setTimeout(()=>{
+ loadLibrarySettings();
+ if($('#makeRecommendations'))$('#makeRecommendations').onclick=renderRecommendations;
+ if($('#saveLibrarySettings'))$('#saveLibrarySettings').onclick=saveLibrarySettings;
+},500);
