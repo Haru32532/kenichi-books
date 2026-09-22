@@ -1,4 +1,4 @@
-const CACHE_NAME='kenichi-v40';
+const CACHE_NAME='kenichi-v41';
 const STATIC_FILES=['/','/index.html','/style.css','/initial_books.json','/manifest.webmanifest','/icon-180.png','/icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(STATIC_FILES)));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))));self.clients.claim()});

@@ -49,7 +49,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "色",
+      "知育"
+    ],
+    "metadataVerification": "一部確認",
+    "editionNotes": "版により表記確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "あかいふうせん",
@@ -62,7 +69,12 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "物語"
+    ],
+    "metadataVerification": "要確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "赤ちゃんからの楽しい育脳あそび",
@@ -270,7 +282,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "知育",
+      "ことば"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "1・2・3かずのかぞえかた",
@@ -296,7 +314,10 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "kumonLevel": "4A",
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "いっすんぼうし",
@@ -309,7 +330,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "日本文化",
+      "昔話"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "版を確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "いないいないばあ",
@@ -361,7 +389,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "知育",
+      "形"
+    ],
+    "metadataVerification": "要確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "いろいろないろのえほん",
@@ -504,7 +538,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "図鑑",
+      "食べ物"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "おつきさまこんばんは",
@@ -517,7 +557,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "季節",
+      "月"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "おつきみうさぎ",
@@ -530,7 +576,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "季節",
+      "お月見"
+    ],
+    "metadataVerification": "確認済",
+    "editionNotes": "2026/9/6購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "おなら",
@@ -556,7 +609,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "乳幼児",
+      "あいさつ"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "版・出版社を確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "おたんじょうび",
@@ -569,7 +629,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "生活",
+      "行事"
+    ],
+    "metadataVerification": "要確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "おひさまあはは",
@@ -582,7 +648,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "乳幼児",
+      "ことば"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "おふろだいすき",
@@ -595,7 +667,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "生活",
+      "お風呂"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "おふろでちゃぷちゃぷ",
@@ -673,7 +751,15 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "日本文化",
+      "論語",
+      "音読"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "毎日1〜2項目活用",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "おやすみ",
@@ -744,14 +830,20 @@
     "title": "かおかおどんなかお",
     "genre": "乳幼児・表情",
     "author": "柳原良平",
-    "illustrator": "",
+    "illustrator": "柳原良平",
     "translator": "",
     "publisher": "こぐま社",
     "owned": true,
-    "verification": "",
+    "verification": "出版社・書誌DB確認",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "乳幼児",
+      "表情"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "かぐやひめ",
@@ -852,7 +944,7 @@
     "translator": "",
     "publisher": "福音館書店",
     "owned": true,
-    "verification": "",
+    "verification": "出版社・書誌DB確認",
     "note": "",
     "publishedDate": "1987-06-30",
     "isbn": "9784834002720"
@@ -881,7 +973,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "2008-04",
-    "isbn": "9784774313740"
+    "isbn": "9784774313740",
+    "genreTags": [
+      "季節",
+      "自然"
+    ],
+    "metadataVerification": "一部確認",
+    "editionNotes": "2026/9/6購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "かばくん",
@@ -894,7 +993,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "動物",
+      "名作"
+    ],
+    "metadataVerification": "確認済",
+    "editionNotes": "2026/9/6購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "からすのパンやさん",
@@ -907,7 +1013,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "物語",
+      "食べ物"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "カユイカユイ",
@@ -1011,7 +1123,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "乳幼児",
+      "生活"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "ぎゅ",
@@ -1050,7 +1168,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "乳幼児",
+      "探し絵"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "くだもの 平山和子",
@@ -1076,7 +1200,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "食べ物",
+      "乳幼児"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "くだものだいふきえほん みかんのまき ちびまる子ちゃん",
@@ -1154,7 +1284,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "英語",
+      "読み聞かせ"
+    ],
+    "metadataVerification": "要確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "くらべてかんがえる",
@@ -1479,7 +1615,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "色",
+      "知育"
+    ],
+    "metadataVerification": "要確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "このあいだになにがあった？",
@@ -1505,7 +1647,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "リズム",
+      "乳幼児"
+    ],
+    "metadataVerification": "確認済",
+    "editionNotes": "2026/9/6購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "こみかんちゃんとでこんくん",
@@ -1557,7 +1706,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "生活",
+      "あいさつ"
+    ],
+    "metadataVerification": "一部確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "こんにちはしまじろう",
@@ -1648,7 +1803,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "クリスマス"
+    ],
+    "kumonLevel": "2A",
+    "metadataVerification": "一部確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "さよならさんかく",
@@ -1661,7 +1822,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "ことば",
+      "リズム"
+    ],
+    "metadataVerification": "一部確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "サンタのたのしいクリスマス",
@@ -1687,7 +1854,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "昔話"
+    ],
+    "kumonLevel": "3A",
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "しごとをとりかえただんなさん",
@@ -1752,7 +1925,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "乳幼児",
+      "色"
+    ],
+    "metadataVerification": "一部確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "しましまのクリスタ(英語版)",
@@ -1809,12 +1988,12 @@
   {
     "title": "14ひきのおつきみ",
     "genre": "季節・行事",
-    "author": "",
-    "illustrator": "",
+    "author": "いわむらかずお",
+    "illustrator": "いわむらかずお",
     "translator": "",
-    "publisher": "",
+    "publisher": "童心社",
     "owned": true,
-    "verification": "",
+    "verification": "出版社・書誌DB確認",
     "note": "",
     "publishedDate": "",
     "isbn": ""
@@ -1869,20 +2048,33 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "乳幼児",
+      "食べ物"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "しんせつなともだち",
     "genre": "物語・思いやり",
-    "author": "",
-    "illustrator": "",
-    "translator": "",
-    "publisher": "",
+    "author": "方軼羣",
+    "illustrator": "村山知義",
+    "translator": "君島久子",
+    "publisher": "福音館書店",
     "owned": true,
-    "verification": "",
+    "verification": "出版社・書誌DB確認",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "物語",
+      "思いやり"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "2026/9/6購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "シンデレラ",
@@ -1947,7 +2139,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "乳幼児",
+      "ゲーム"
+    ],
+    "metadataVerification": "一部確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "すってんてんぐ",
@@ -2038,7 +2236,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "動物",
+      "散歩"
+    ],
+    "metadataVerification": "確認済",
+    "editionNotes": "2026/9/6購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "空のかあさま",
@@ -2064,7 +2269,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "日本文化",
+      "昔話"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "たしざん",
@@ -2116,7 +2327,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "乳幼児",
+      "定番"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "だるまさんの",
@@ -2376,7 +2593,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "時計",
+      "知育"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "どっちにかくれてる？",
@@ -2415,7 +2638,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "物語",
+      "名作"
+    ],
+    "metadataVerification": "一部確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "ドラえもんのはじめて英語図鑑",
@@ -2428,7 +2657,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "図鑑",
+      "英語"
+    ],
+    "metadataVerification": "要確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "ドラえもんの社会科 都道府県まるわかり地図帳",
@@ -2506,7 +2741,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "図鑑",
+      "自然"
+    ],
+    "metadataVerification": "要確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "なにいろ？ くもんの絵本",
@@ -2558,7 +2799,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "図鑑",
+      "自然"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "2026/9/6購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "ネオポケット 鳥",
@@ -2571,7 +2819,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "図鑑",
+      "自然"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "2026/9/6購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "ねこがいっぱい",
@@ -2714,7 +2969,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "自然",
+      "図鑑"
+    ],
+    "metadataVerification": "要確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "のろまなローラー",
@@ -2766,7 +3027,15 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "生活"
+    ],
+    "kumonLevel": "3A",
+    "kateiHoikuenRecommended": true,
+    "kateiHoikuenEvidence": "所有本マスター記載",
+    "metadataVerification": "一部確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "はじめてであうすうがくの絵本1",
@@ -2948,7 +3217,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "名作"
+    ],
+    "kumonLevel": "3A",
+    "metadataVerification": "一部確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "はらぺこくま",
@@ -2992,12 +3267,12 @@
   {
     "title": "ぴょーん",
     "genre": "",
-    "author": "",
-    "illustrator": "",
+    "author": "まつおかたつひで",
+    "illustrator": "まつおかたつひで",
     "translator": "",
-    "publisher": "",
+    "publisher": "ポプラ社",
     "owned": true,
-    "verification": "",
+    "verification": "出版社・書誌DB確認",
     "note": "",
     "publishedDate": "",
     "isbn": ""
@@ -3143,7 +3418,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "ことば",
+      "しりとり"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "冬の虫 冬の自然",
@@ -3195,7 +3476,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "乳幼児",
+      "色"
+    ],
+    "metadataVerification": "一部確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "ぼくのなまえベビーくもん4号",
@@ -3221,7 +3508,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "物語"
+    ],
+    "kumonLevel": "4A",
+    "metadataVerification": "要確認",
+    "editionNotes": "作者・絵・訳の再確認推奨",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "ボールくんころころころ",
@@ -3299,7 +3593,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "クリスマス",
+      "季節"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "2026/9/6購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "まねっこ！あかちゃんことばずかん",
@@ -3351,7 +3652,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "乳幼児",
+      "色"
+    ],
+    "metadataVerification": "一部確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "ミッキーのまほうつかいのでし",
@@ -3377,7 +3684,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "図鑑",
+      "自然"
+    ],
+    "metadataVerification": "要確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "道ばたの四季",
@@ -3390,7 +3703,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "図鑑",
+      "自然"
+    ],
+    "metadataVerification": "要確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "みんなうんち",
@@ -3403,7 +3722,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "科学",
+      "からだ"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "むかいあわせ",
@@ -3559,7 +3884,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "乳幼児",
+      "生活"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "ももたろう",
@@ -3598,7 +3929,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "乳幼児",
+      "ふれあい"
+    ],
+    "metadataVerification": "要確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "やさい 平山和子",
@@ -3676,7 +4013,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "日本文化",
+      "ことば遊び"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "2026/9/6購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "ゆうたはともだち",
@@ -3793,7 +4137,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "時計",
+      "知育"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "外郎売",
@@ -3806,7 +4156,15 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "日本文化",
+      "古典",
+      "音読"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "出版社・版を確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "算数の探検10 数と形のクイズ",
@@ -3819,7 +4177,12 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "算数"
+    ],
+    "metadataVerification": "一部確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "絵で見る日本の歴史",
@@ -3832,7 +4195,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "日本史",
+      "図鑑",
+      "日本文化"
+    ],
+    "metadataVerification": "一部確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "九九のほん",
@@ -3845,7 +4215,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "日本文化",
+      "算数"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "出版社確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "春はあけぼの",
@@ -3858,7 +4235,15 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "日本文化",
+      "古典",
+      "音読"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "出版社を確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "月の満ちかけ絵本",
@@ -3871,7 +4256,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "季節",
+      "月",
+      "科学"
+    ],
+    "metadataVerification": "一部確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "かこさとし からだの本2 たべもののたび",
@@ -3884,7 +4276,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "科学",
+      "からだ"
+    ],
+    "metadataVerification": "確認済",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "チャイルドブックのちいさな昔話51話",
@@ -3897,7 +4295,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "日本文化",
+      "昔話"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "作者・出版社を確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "観察力が身につく 改訂版 ちがいのわかる絵辞典",
@@ -3910,7 +4315,15 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "観察",
+      "知育",
+      "絵辞典"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "2026/9/8購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "三びきのこぶた",
@@ -3923,7 +4336,15 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "日本文化",
+      "昔話"
+    ],
+    "kumonLevel": "2A",
+    "metadataVerification": "一部確認",
+    "editionNotes": "2026/9/8購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "ハロウィンドキドキおばけの日 ますだゆうこ",
@@ -3949,7 +4370,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "算数"
+    ],
+    "metadataVerification": "一部確認",
+    "editionNotes": "2026/9/8購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "10人のゆかいなひっこし",
@@ -3962,7 +4389,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "数",
+      "知育"
+    ],
+    "metadataVerification": "一部確認",
+    "editionNotes": "2026/9/8購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "こんとあき",
@@ -3975,7 +4409,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "物語",
+      "名作"
+    ],
+    "metadataVerification": "確認済",
+    "editionNotes": "2026/9/8購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "からだにもしもし",
@@ -3988,7 +4429,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "科学",
+      "からだ"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "2026/9/8購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "しろいうさぎとくろいうさぎ",
@@ -4001,7 +4449,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "物語",
+      "名作"
+    ],
+    "metadataVerification": "一部確認",
+    "editionNotes": "2026/9/8購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "ゆきのひ",
@@ -4014,7 +4469,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "物語",
+      "冬"
+    ],
+    "metadataVerification": "一部確認",
+    "editionNotes": "2026/9/8購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "ごんぎつね",
@@ -4027,7 +4489,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "日本文学"
+    ],
+    "metadataVerification": "確認済",
+    "editionNotes": "2026/9/8購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "なまえのないねこ",
@@ -4040,7 +4508,14 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "物語",
+      "猫"
+    ],
+    "metadataVerification": "一部確認",
+    "editionNotes": "2026/9/8購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "14ひきのピクニック",
@@ -4053,7 +4528,15 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "季節",
+      "自然"
+    ],
+    "kumonLevel": "3A",
+    "metadataVerification": "一部確認",
+    "editionNotes": "2026/9/8購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "算数の探検7 ふく面の算数",
@@ -4066,7 +4549,13 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "算数"
+    ],
+    "metadataVerification": "一部確認",
+    "editionNotes": "2026/9/8購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   },
   {
     "title": "算数の探検6 変身箱の不思議",
@@ -4079,6 +4568,126 @@
     "verification": "",
     "note": "",
     "publishedDate": "",
-    "isbn": ""
+    "isbn": "",
+    "genreTags": [
+      "算数"
+    ],
+    "metadataVerification": "一部確認",
+    "editionNotes": "2026/9/8購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
+  },
+  {
+    "title": "あ・い・うのえほん－どうぶつ",
+    "genre": "知育・ことば",
+    "genreTags": [
+      "知育",
+      "ことば"
+    ],
+    "metadataVerification": "要確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
+  },
+  {
+    "title": "アイディアいっぱい サンタのたのしいクリスマス",
+    "genre": "クリスマス・季節",
+    "genreTags": [
+      "クリスマス",
+      "季節"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "2026/9/6購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
+  },
+  {
+    "title": "いないいないばぁっ！すてきないちにち マグネットであそぼう",
+    "genre": "しかけ・遊び",
+    "genreTags": [
+      "しかけ",
+      "遊び"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "2026/9/6購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
+  },
+  {
+    "title": "きいてごらん",
+    "publisher": "くもん出版",
+    "genre": "Baby Kumon・ことば",
+    "genreTags": [
+      "Baby Kumon",
+      "ことば"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "Baby Kumon5号 よみきかせえほん",
+    "metadataSource": "所有本マスター 2026-09-08更新"
+  },
+  {
+    "title": "くだものどうぞ",
+    "publisher": "コクヨ",
+    "genre": "しかけ・食べ物",
+    "genreTags": [
+      "しかけ",
+      "食べ物"
+    ],
+    "metadataVerification": "一部確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
+  },
+  {
+    "title": "クリスマス",
+    "author": "バーバラ・クーニー",
+    "genre": "クリスマス・季節",
+    "genreTags": [
+      "クリスマス",
+      "季節"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "出版社・訳者を確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
+  },
+  {
+    "title": "ぐるんぱのようちえん",
+    "author": "西内ミナミ",
+    "illustrator": "堀内誠一",
+    "publisher": "福音館書店",
+    "genre": "物語・名作",
+    "genreTags": [
+      "物語",
+      "名作"
+    ],
+    "metadataVerification": "確認済",
+    "editionNotes": "2026/9/6購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
+  },
+  {
+    "title": "トーマスのポケットえほん きかんしゃトーマスとなかまたち たのしい6さつのおはなし",
+    "genre": "トーマス・乗り物",
+    "genreTags": [
+      "トーマス",
+      "乗り物"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "2026/9/6購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
+  },
+  {
+    "title": "はじめておけいこボックス ポプラ社×こぐま会",
+    "publisher": "ポプラ社",
+    "genre": "知育教材",
+    "genreTags": [
+      "知育教材"
+    ],
+    "metadataVerification": "一部確認",
+    "metadataSource": "所有本マスター 2026-09-08更新"
+  },
+  {
+    "title": "ハロウィンドキドキおばけの日",
+    "author": "ますだゆうこ",
+    "genre": "季節・ハロウィン",
+    "genreTags": [
+      "季節",
+      "ハロウィン"
+    ],
+    "metadataVerification": "要確認",
+    "editionNotes": "2026/9/8購入",
+    "metadataSource": "所有本マスター 2026-09-08更新"
   }
 ]
