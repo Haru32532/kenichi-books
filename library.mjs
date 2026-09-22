@@ -1,1 +1,0 @@
-import fs from"node:fs/promises";import path from"node:path";export default async function handler(req,res){try{res.status(200).json({books:JSON.parse(await fs.readFile(path.join(process.cwd(),"public","initial_books.json"),"utf8"))})}catch(e){res.status(500).json({error:String(e)})}}

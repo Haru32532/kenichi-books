@@ -1,1 +1,0 @@
-import fs from 'fs';import path from 'path';fs.mkdirSync('public',{recursive:true});for(const f of ['index.html','style.css','app.js','sw.js','manifest.webmanifest'])fs.copyFileSync(f,path.join('public',f));console.log('Clean product foundation copied to public/.');
