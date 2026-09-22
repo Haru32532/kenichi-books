@@ -464,7 +464,7 @@ function classifyMieteTitle(title){
 }
 
 init().then(async()=>{await applyLibraryMetadata();await mergeBundledMiete();await syncOfficialKumon2026(false);render();renderAnalysis();renderMieteRank();integratedSummary();renderLibraryEnrichStatus();integratedSummary()});setTimeout(renderScanProgress,0);
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=42',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=43',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
 
 
 // ===== v35 sales foundation =====
@@ -631,3 +631,22 @@ return{isbn:code,title:'',author:'',publisher:'',publishedDate:'',source:'3経�
 }
 async function mcISBN(raw){let code=String(raw||'').replace(/\D/g,'');if(code.length!==13)return mcM('ISBN-13を確認してください。');mcM('ISBN '+code+' を読み取りました。書誌情報を検索しています…');let b=await mcLookup41(code);mcShowResult(b);if(b.title){mcAdd({...b,status:'現物ISBN確認済',at:new Date().toISOString()});mcM('整備リストへ自動登録しました。通常の本棚は変更していません。')}else mcM('ISBNは読み取れましたが、openBD・Google Books・国立国会図書館サーチの3経路で書誌情報を取得できませんでした。下のタイトル検索を使ってください。')}
 async function mcCam(){try{if(mcCtl)mcCtl.stop();let r=new ZXingBrowser.BrowserMultiFormatReader();mcCtl=await r.decodeFromVideoDevice(undefined,'mcVideo',(res,err,ctl)=>{if(res){let code=String(res.getText()||'').replace(/\D/g,'');if(/^97[89]\d{10}$/.test(code)){ctl.stop();mcCtl=null;mcM('ISBN '+code+' を読み取りました。');mcISBN(code)}}});mcM('ISBNバーコードをカメラに映してください。')}catch(e){mcM('カメラエラー：'+e.message)}}
+
+// ===== v43: retain physical ISBN + verified fallback =====
+let mcPhysicalIsbn='';
+const MC_VERIFIED={
+ '9784323002132':{title:'はちこう',author:'くめげんいち',publisher:'金の星社',publishedDate:'1971-09',source:'出版社公式確認済'},
+ '9784893173454':{title:'はらぺこくま',author:'ハインツ・ヤーニッシュ',publisher:'ひくまの出版',publishedDate:'2005-10',source:'確認済書誌'}
+};
+const mcISBN42=mcISBN;
+mcISBN=async function(raw){
+ const code=String(raw||'').replace(/\D/g,''); mcPhysicalIsbn=code;
+ if(code.length!==13)return mcM('ISBN-13を確認してください。');
+ mcM('ISBN '+code+' を読み取りました。書誌情報を検索しています…');
+ let b=await mcLookup41(code);
+ if(!b.title && MC_VERIFIED[code]) b={isbn:code,...MC_VERIFIED[code]};
+ mcShowResult(b);
+ if(b.title){mcAdd({...b,isbn:code,status:'現物ISBN確認済',at:new Date().toISOString()});mcM('整備リストへ自動登録しました。通常の本棚は変更していません。');$('#mcFallbackGo').style.display='none'}
+ else{$('#mcFallbackGo').style.display='inline-block';mcM('ISBNは保持しました。タイトルを入力して候補を検索し、現物に合う候補を選んでください。')}
+};
+setTimeout(()=>{const b=$('#mcFallbackGo');if(b)b.onclick=()=>{const q=$('#mcTitle').value.trim();if(!q||!mcPhysicalIsbn)return mcM('先にISBNを読み取り、タイトルを入力してください。');mcAdd({isbn:mcPhysicalIsbn,title:q,author:'',publisher:'',publishedDate:'',source:'現物ISBN＋タイトル手入力',status:'書誌要確認',at:new Date().toISOString()});mcM('現物ISBNを保持して整備リストへ登録しました。');b.style.display='none'}},800);
