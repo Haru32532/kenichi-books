@@ -464,7 +464,7 @@ function classifyMieteTitle(title){
 }
 
 init().then(async()=>{await applyLibraryMetadata();await mergeBundledMiete();await syncOfficialKumon2026(false);render();renderAnalysis();renderMieteRank();integratedSummary();renderLibraryEnrichStatus();integratedSummary()});setTimeout(renderScanProgress,0);
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=36',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=37',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
 
 
 // ===== v35 sales foundation =====
@@ -576,12 +576,12 @@ function librarySearchUrl(b){
 }
 function renderRecommendations(){
  const el=$('#recommendationList');if(!el)return;
- const a=recommendationCandidates();
+ const a=recommendationCandidates(),lib=localStorage.getItem('libraryName')||'登録した図書館';
  if(!a.length){el.innerHTML='<p class="muted">条件に合う未所有本がまだありません。ジャンル設定または未所有本データを確認してください。</p>';return}
- el.innerHTML=a.map(({b,reasons})=>`<div class="recbook"><b>${esc(b.title)}</b><br><span>${esc(b.author||'作者未登録')}｜${esc(b.publisher||'出版社未登録')}</span><br><small>${esc(reasons.join('・'))}</small>${librarySearchUrl(b)?`<br><a target="_blank" rel="noopener" href="${esc(librarySearchUrl(b))}">図書館で検索・予約へ</a>`:''}</div>`).join('')
+ el.innerHTML=a.map(({b,reasons})=>`<div class="recbook"><b>${esc(b.title)}</b><br><span>${esc(b.author||'作者未登録')}｜${esc(b.publisher||'出版社未登録')}</span><br><small>${esc(reasons.join('・'))}</small>${librarySearchUrl(b)?`<br><a target="_blank" rel="noopener" href="${esc(librarySearchUrl(b))}">${esc(lib)}で探す・予約へ</a>`:''}</div>`).join('')
 }
-function loadLibrarySettings(){const e=$('#librarySearchBase');if(e)e.value=localStorage.getItem('librarySearchBase')||''}
-function saveLibrarySettings(){localStorage.setItem('librarySearchBase',$('#librarySearchBase')?.value.trim()||'');renderRecommendations()}
+function loadLibrarySettings(){const e=$('#librarySearchBase'),n=$('#libraryName');if(e)e.value=localStorage.getItem('librarySearchBase')||'';if(n)n.value=localStorage.getItem('libraryName')||''}
+function saveLibrarySettings(){localStorage.setItem('librarySearchBase',$('#librarySearchBase')?.value.trim()||'');localStorage.setItem('libraryName',$('#libraryName')?.value.trim()||'');renderRecommendations()}
 setTimeout(()=>{
  loadLibrarySettings();
  if($('#makeRecommendations'))$('#makeRecommendations').onclick=renderRecommendations;
