@@ -340,7 +340,7 @@ async function googleTitleMetadata(title,author=''){
  }catch(e){return null}
 }
 async function enrichLibraryBatch(limit=25){
- const targets=books.filter(b=>b.owned!==false && (!b.author||!b.publisher||!b.publishedDate)).slice(0,limit);
+ const targets=books.filter(b=>b.owned!==false && (!b.author||!b.publisher||!b.publishedDate)).sort((a,b)=>(!a.author?-1:1)-(!b.author?-1:1)||cmp(a,b)).slice(0,limit);
  if(!targets.length){renderLibraryEnrichStatus('自動補完できる未確認本はありません。ISBN未登録本はスキャンで版を確定してください。');return}
  let changedBooks=0,checked=0;
  $('#enrichLibrary').disabled=true;
@@ -356,7 +356,7 @@ async function enrichLibraryBatch(limit=25){
  render(); renderLibraryEnrichStatus(`${checked}冊確認し、${changedBooks}冊の空欄を補完しました。ISBNはタイトル検索では付与せず、スキャン時だけ確定します。`);
  $('#enrichLibrary').disabled=false;
 }
-if($('#enrichLibrary'))$('#enrichLibrary').onclick=()=>enrichLibraryBatch(25);
+if($('#enrichLibrary'))$('#enrichLibrary').onclick=()=>enrichLibraryBatch(50);
 if($('#exportBeforeEnrich'))$('#exportBeforeEnrich').onclick=()=>$('#backup')?.click();
 
 function titleMatchKey(title){return norm(String(title||'').replace(/^(おでかけ版|ボードブック版)/,''))}
@@ -464,4 +464,4 @@ function classifyMieteTitle(title){
 }
 
 init().then(async()=>{await applyLibraryMetadata();await mergeBundledMiete();await syncOfficialKumon2026(false);render();renderAnalysis();renderMieteRank();integratedSummary();renderLibraryEnrichStatus();integratedSummary()});setTimeout(renderScanProgress,0);
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=33',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?v=34',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
