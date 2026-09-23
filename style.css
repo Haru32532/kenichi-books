@@ -3,3 +3,11 @@
 .goalgrid>div{background:#faf8f3;border-radius:10px;padding:10px}
 .goalgrid b,.goalgrid small{display:block}
 .pace{font-weight:700;font-size:17px}
+
+/* v5: top navigation + per-weekday goal controls */
+nav{position:sticky!important;top:0!important;bottom:auto!important;z-index:1000;display:flex;gap:4px;overflow-x:auto;white-space:nowrap;padding:8px 8px;background:rgba(255,255,255,.96);border-bottom:1px solid #e8e3da;-webkit-overflow-scrolling:touch}
+nav button{flex:0 0 auto;min-width:max-content}
+body{padding-bottom:20px!important}
+.weekdayChecks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 12px}
+.weekdayChecks label{display:flex;align-items:center;justify-content:center;gap:4px;padding:9px 4px;border:1px solid #ddd5c8;border-radius:10px;background:#fff}
+.holidayOption{display:flex!important;align-items:flex-start;gap:8px;margin:12px 0;padding:12px;background:#faf8f3;border-radius:10px}

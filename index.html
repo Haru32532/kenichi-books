@@ -1,6 +1,8 @@
 <!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>けんちゃんの本棚｜読書伴走</title><link rel="manifest" href="/manifest.webmanifest"><link rel="stylesheet" href="/style.css"></head>
 <body><header><div><b>けんちゃんの本棚</b><small>0歳からの読み聞かせ伴走</small></div></header>
+<nav><button data-go="home">ホーム</button><button data-go="bookshelf">本棚</button><button data-go="records">読書記録</button><button data-go="recommend">おすすめ</button><button data-go="analysis">分析</button><button data-go="scan">スキャン</button></nav>
+
 <main>
 <section id="home" class="page active">
  <h1>今月の読み聞かせ</h1>
@@ -27,7 +29,18 @@
 <button id="thirdBirthday">3歳の誕生日を目標日にする</button>
 <label>現在の累計回数（初回設定・補正用）<input id="baselineReads" type="number" min="0"></label>
 <small>ミーテ取込後は「この基準値＋取り込んだ読み聞かせ回数」で計算します。</small>
-<h3>読む日</h3><label><input id="wk" type="checkbox"> 平日（月〜金・祝日除外）</label><label><input id="sat" type="checkbox"> 土曜</label><label><input id="hol" type="checkbox"> 日曜・祝日</label><button id="saveSettings">保存</button></div><div class="card"><h2>利用図書館</h2><input id="libraryName" placeholder="例：さいたま市図書館"><button id="saveLibrary">保存</button></div></section>
+<h3>読む曜日</h3>
+<div class="weekdayChecks">
+<label><input id="mon" type="checkbox"> 月</label>
+<label><input id="tue" type="checkbox"> 火</label>
+<label><input id="wed" type="checkbox"> 水</label>
+<label><input id="thu" type="checkbox"> 木</label>
+<label><input id="fri" type="checkbox"> 金</label>
+<label><input id="sat" type="checkbox"> 土</label>
+<label><input id="sun" type="checkbox"> 日</label>
+</div>
+<label class="holidayOption"><input id="excludeHolidays" type="checkbox"> 選んだ曜日が祝日の場合は読書予定日から省く</label>
+<button id="saveSettings">保存</button></div><div class="card"><h2>利用図書館</h2><input id="libraryName" placeholder="例：さいたま市図書館"><button id="saveLibrary">保存</button></div></section>
 </main>
-<nav><button data-go="home">ホーム</button><button data-go="bookshelf">本棚</button><button data-go="records">読書記録</button><button data-go="recommend">おすすめ</button><button data-go="analysis">分析</button><button data-go="scan">スキャン</button></nav>
-<script src="https://unpkg.com/@zxing/browser@latest"></script><script src="/client.js?v=4"></script></body></html>
+
+<script src="https://unpkg.com/@zxing/browser@latest"></script><script src="/client.js?v=5"></script></body></html>

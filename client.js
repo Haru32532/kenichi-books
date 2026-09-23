@@ -1,7 +1,11 @@
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const KEYS={profile:'rc_profile_v1',goal:'rc_goal_v1',books:'rc_books_v1',reads:'rc_reads_v1',plan:'rc_plan_v1',scan:'rc_master_scan_v1',library:'rc_library_v1'};
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}}, save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
-let profile=load(KEYS.profile,{name:'',birthDate:''}), goal=load(KEYS.goal,{target:30000,targetDate:'',weekdays:true,saturday:false,sunHoliday:false,baselineReads:0});
+let profile=load(KEYS.profile,{name:'',birthDate:''}), goal=load(KEYS.goal,{target:30000,targetDate:'',days:{1:true,2:true,3:true,4:true,5:true,6:false,0:false},excludeHolidays:true,baselineReads:0});
+if(!goal.days){
+ goal.days={0:!!goal.sunHoliday,1:!!goal.weekdays,2:!!goal.weekdays,3:!!goal.weekdays,4:!!goal.weekdays,5:!!goal.weekdays,6:!!goal.saturday};
+ if(goal.excludeHolidays===undefined) goal.excludeHolidays=!goal.sunHoliday;
+}
 let books=load(KEYS.books,[]), reads=load(KEYS.reads,[]), plan=load(KEYS.plan,{focus:[],recommended:[]});
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 function go(id){$$('.page').forEach(x=>x.classList.toggle('active',x.id===id));scrollTo(0,0);render()} $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
@@ -16,7 +20,7 @@ function jpHolidays(y){
  return s
 }
 function isHoliday(d){return jpHolidays(d.getFullYear()).has(ymd(d))}
-function eligibleDate(d){let w=d.getDay(),h=isHoliday(d);if(h)return !!goal.sunHoliday;if(w===0)return !!goal.sunHoliday;if(w===6)return !!goal.saturday;return !!goal.weekdays}
+function eligibleDate(d){if(goal.excludeHolidays&&isHoliday(d))return false;return !!(goal.days&&goal.days[d.getDay()])}
 function eligibleDays(from,to){let n=0,d=new Date(from),end=new Date(to);d.setHours(12,0,0,0);end.setHours(12,0,0,0);if(d>end)return 0;for(;d<=end;d.setDate(d.getDate()+1))if(eligibleDate(d))n++;return n}
 function genresForMonth(){let now=new Date(), ym=now.toISOString().slice(0,7), m={};reads.filter(r=>String(r.date||'').startsWith(ym)).forEach(r=>{let b=books.find(x=>x.id===r.bookId)||{};(b.genreTags||['未分類']).forEach(g=>m[g]=(m[g]||0)+(+r.count||0))});return m}
 function renderGenres(el){let m=genresForMonth(),sum=Object.values(m).reduce((a,b)=>a+b,0)||1, arr=Object.entries(m).sort((a,b)=>b[1]-a[1]);el.innerHTML=arr.length?arr.map(([g,n])=>`<div class="genre"><span><b>${esc(g)}</b><small>${n}回・${Math.round(n/sum*100)}%</small></span><div class="mini"><i style="width:${n/sum*100}%"></i></div></div>`).join(''):'まだ今月の記録がありません。';return arr}
@@ -39,9 +43,12 @@ function render(){
 }
 function renderBookList(){let q=($('#bookSearch')?.value||'').toLowerCase(),a=books.filter(b=>[b.title,b.author,b.publisher,b.isbn].join(' ').toLowerCase().includes(q));$('#bookList').innerHTML=a.map(b=>`<div class="book"><b>${esc(b.title)}</b><small>${esc(b.author||'作者未登録')}｜${esc(b.publisher||'出版社未登録')}</small></div>`).join('')}
 $('#bookSearch').oninput=renderBookList;
-function fillSettings(){$('#childName').value=profile.name||'';$('#birthDate').value=profile.birthDate||'';$('#goalInput').value=goal.target||30000;$('#goalDate').value=goal.targetDate||'';$('#baselineReads').value=goal.baselineReads||0;$('#wk').checked=!!goal.weekdays;$('#sat').checked=!!goal.saturday;$('#hol').checked=!!goal.sunHoliday;$('#libraryName').value=load(KEYS.library,{name:''}).name||''}
+function fillSettings(){$('#childName').value=profile.name||'';$('#birthDate').value=profile.birthDate||'';$('#goalInput').value=goal.target||30000;$('#goalDate').value=goal.targetDate||'';$('#baselineReads').value=goal.baselineReads||0;
+$('#mon').checked=!!goal.days[1];$('#tue').checked=!!goal.days[2];$('#wed').checked=!!goal.days[3];$('#thu').checked=!!goal.days[4];$('#fri').checked=!!goal.days[5];$('#sat').checked=!!goal.days[6];$('#sun').checked=!!goal.days[0];$('#excludeHolidays').checked=!!goal.excludeHolidays;$('#libraryName').value=load(KEYS.library,{name:''}).name||''}
 $('#thirdBirthday').onclick=()=>{let b=$('#birthDate').value;if(!b){alert('先に生年月日を入力してください。');return}let d=new Date(b+'T12:00:00');d.setFullYear(d.getFullYear()+3);$('#goalDate').value=ymd(d)};
-$('#saveSettings').onclick=()=>{profile={name:$('#childName').value,birthDate:$('#birthDate').value};goal={target:+$('#goalInput').value||30000,targetDate:$('#goalDate').value,baselineReads:+$('#baselineReads').value||0,weekdays:$('#wk').checked,saturday:$('#sat').checked,sunHoliday:$('#hol').checked};save(KEYS.profile,profile);save(KEYS.goal,goal);render()}
+$('#saveSettings').onclick=()=>{profile={name:$('#childName').value,birthDate:$('#birthDate').value};goal={target:+$('#goalInput').value||30000,targetDate:$('#goalDate').value,baselineReads:+$('#baselineReads').value||0,
+days:{1:$('#mon').checked,2:$('#tue').checked,3:$('#wed').checked,4:$('#thu').checked,5:$('#fri').checked,6:$('#sat').checked,0:$('#sun').checked},
+excludeHolidays:$('#excludeHolidays').checked};save(KEYS.profile,profile);save(KEYS.goal,goal);render()}
 $('#saveLibrary').onclick=()=>save(KEYS.library,{name:$('#libraryName').value});
 $('#addRead').onclick=()=>{let t=$('#manualTitle').value.trim();if(!t)return;let b=books.find(x=>x.title===t);if(!b){b={id:crypto.randomUUID(),title:t,author:'',publisher:'',isbn:'',genreTags:['未分類']};books.push(b);save(KEYS.books,books)}reads.push({id:crypto.randomUUID(),bookId:b.id,date:ymd(new Date()),count:+$('#manualCount').value||1,source:'manual'});save(KEYS.reads,reads);$('#manualTitle').value='';render()}
 $('#pdfStub').onclick=()=>$('#pdfMsg').textContent=$('#mietePdf').files[0]?'PDFを選択しました。次工程で「抽出→確認→重複防止→取込」の専用アダプターを接続します。':'PDFを選択してください。';
