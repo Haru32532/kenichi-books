@@ -8,7 +8,18 @@ if(!goal.days){
 }
 let books=load(KEYS.books,[]), reads=load(KEYS.reads,[]), plan=load(KEYS.plan,{focus:[],recommended:[]});
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-function go(id){$$('.page').forEach(x=>x.classList.toggle('active',x.id===id));scrollTo(0,0);render()} $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+function go(id){
+  $$('.page').forEach(x=>x.classList.toggle('active',x.id===id));
+  $$('nav [data-go]').forEach(x=>x.classList.toggle('on',x.dataset.go===id));
+  window.scrollTo({top:0,left:0,behavior:'auto'});
+  render();
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-go]');
+  if(!b)return;
+  e.preventDefault();
+  go(b.dataset.go);
+});
 function totalReads(){return (+goal.baselineReads||0)+reads.reduce((a,r)=>a+(+r.count||0),0)}
 function ymd(d){return d.toISOString().slice(0,10)}
 function nthMonday(y,m,n){let d=new Date(y,m-1,1,12),add=(8-d.getDay())%7;d.setDate(1+add+(n-1)*7);return ymd(d)}
