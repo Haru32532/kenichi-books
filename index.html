@@ -5,7 +5,15 @@
 <section id="home" class="page active">
  <h1>今月の読み聞かせ</h1>
  <div class="card hero"><div class="row"><div><small>累計</small><strong id="totalReads">0回</strong></div><div><small>目標</small><strong id="goalTotal">30,000回</strong></div></div>
- <div class="bar"><i id="goalBar"></i></div><p id="goalPace"></p><button data-go="settings">目標・読む曜日を設定</button></div>
+ <div class="bar"><i id="goalBar"></i></div>
+<div class="goalgrid">
+ <div><small>達成率</small><b id="goalPercent">0%</b></div>
+ <div><small>残り回数</small><b id="goalRemain">0回</b></div>
+ <div><small>目標日まで</small><b id="calendarRemain">—</b></div>
+ <div><small>読む予定日</small><b id="eligibleRemain">—</b></div>
+</div>
+<p id="goalPace" class="pace"></p><p id="goalToday"></p>
+<button data-go="settings">目標・読む曜日を設定</button></div>
  <div class="card"><h2>今月の推奨図書</h2><ul id="monthlyBooks"></ul><div class="twocol"><div><small>コンプリート</small><b id="bookProgress">0 / 0冊</b></div><div><small>繰り返し</small><b id="repeatProgress">0回</b></div></div><button data-go="recommend">推奨図書を編集</button></div>
  <div class="card"><h2>今月のジャンル</h2><div id="genreBars"></div><p id="genreInsight"></p><button data-go="analysis">詳しく見る</button></div>
  <div class="card"><h2>今月の振り返り</h2><div id="reflection"></div></div>
@@ -15,7 +23,11 @@
 <section id="recommend" class="page"><h1>おすすめ</h1><div class="card"><h2>今月伸ばしたいジャンル</h2><div id="focusGenres"></div><p>少ないジャンルと、親が伸ばしたいジャンルを分けて扱います。</p></div><div class="card"><h2>今月の推奨図書</h2><div id="recEditor"></div></div></section>
 <section id="analysis" class="page"><h1>分析</h1><div class="card"><h2>ジャンル別読み聞かせ</h2><div id="analysisGenres"></div></div><div class="card"><h2>冊数と回数</h2><div id="breadthDepth"></div></div></section>
 <section id="scan" class="page"><h1>スキャン</h1><div class="tabs"><button id="modeMaster" class="on">蔵書マスター整備</button><button id="modeShop">お店でチェック</button></div><div class="card"><p>上段978/979＝ISBN、下段192＝Cコード・出版分類・本体価格。どちらを先に読んでも保持します。</p><video id="video" playsinline muted></video><button id="startScan">カメラで読む</button><button id="stopScan">停止</button><div id="scanState"></div><div id="scanResult"></div></div></section>
-<section id="settings" class="page"><h1>設定</h1><div class="card"><h2>子ども</h2><label>ニックネーム<input id="childName"></label><label>生年月日<input id="birthDate" type="date"></label></div><div class="card"><h2>読み聞かせ目標</h2><label>目標回数<input id="goalInput" type="number"></label><label>目標日<input id="goalDate" type="date"></label><h3>読む日</h3><label><input id="wk" type="checkbox"> 平日（月〜金・祝日除外）</label><label><input id="sat" type="checkbox"> 土曜</label><label><input id="hol" type="checkbox"> 日曜・祝日</label><button id="saveSettings">保存</button></div><div class="card"><h2>利用図書館</h2><input id="libraryName" placeholder="例：さいたま市図書館"><button id="saveLibrary">保存</button></div></section>
+<section id="settings" class="page"><h1>設定</h1><div class="card"><h2>子ども</h2><label>ニックネーム<input id="childName"></label><label>生年月日<input id="birthDate" type="date"></label></div><div class="card"><h2>読み聞かせ目標</h2><label>目標回数<input id="goalInput" type="number"></label><label>目標日<input id="goalDate" type="date"></label>
+<button id="thirdBirthday">3歳の誕生日を目標日にする</button>
+<label>現在の累計回数（初回設定・補正用）<input id="baselineReads" type="number" min="0"></label>
+<small>ミーテ取込後は「この基準値＋取り込んだ読み聞かせ回数」で計算します。</small>
+<h3>読む日</h3><label><input id="wk" type="checkbox"> 平日（月〜金・祝日除外）</label><label><input id="sat" type="checkbox"> 土曜</label><label><input id="hol" type="checkbox"> 日曜・祝日</label><button id="saveSettings">保存</button></div><div class="card"><h2>利用図書館</h2><input id="libraryName" placeholder="例：さいたま市図書館"><button id="saveLibrary">保存</button></div></section>
 </main>
 <nav><button data-go="home">ホーム</button><button data-go="bookshelf">本棚</button><button data-go="records">読書記録</button><button data-go="recommend">おすすめ</button><button data-go="analysis">分析</button><button data-go="scan">スキャン</button></nav>
-<script src="https://unpkg.com/@zxing/browser@latest"></script><script src="/client.js?v=3"></script></body></html>
+<script src="https://unpkg.com/@zxing/browser@latest"></script><script src="/client.js?v=4"></script></body></html>
