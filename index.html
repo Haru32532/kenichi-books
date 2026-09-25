@@ -4,6 +4,7 @@
 nav{overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
 nav button{flex:0 0 auto}
 video{max-width:100%;height:auto}
+.month-grid textarea{min-height:90px;width:100%;box-sizing:border-box}.month-grid input[type=month]{width:100%;box-sizing:border-box}.photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.photo-grid figure{margin:0}.photo-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px}.photo-grid figcaption{font-size:12px}.monthly-actions{display:flex;gap:8px;flex-wrap:wrap}.monthly-actions button{flex:1 1 140px}
 </style></head>
 <body><header><div><b>けんちゃんの本棚</b><small>0歳からの読み聞かせ伴走</small></div></header>
 <main>
@@ -25,15 +26,26 @@ video{max-width:100%;height:auto}
 </section>
 <section id="bookshelf" class="page"><h1>本棚</h1><div class="card"><input id="bookSearch" placeholder="タイトル・作者・ISBNで検索"><p id="bookCount"></p><div id="bookList"></div></div></section>
 <section id="records" class="page"><h1>読書記録</h1><div class="card"><h2>ミーテPDF</h2><p>PDF取込は独立アダプターとして接続します。将来API連携へ差し替え可能です。</p><input type="file" id="mietePdf" accept="application/pdf"><button id="pdfStub">取込内容を確認</button><p id="pdfMsg"></p></div><div class="card"><h2>手入力</h2><input id="manualTitle" placeholder="本のタイトル"><input id="manualCount" type="number" min="1" value="1"><button id="addRead">読み聞かせを追加</button></div></section>
+<section id="monthly" class="page"><h1>親子の月間記録</h1>
+<div class="card month-grid"><label>記録する月<input id="journalMonth" type="month"></label><h2>今月の目標</h2><textarea id="journalGoal" placeholder="例：毎日20回読む。秋の絵本を楽しむ。"></textarea><h2>今月の振り返り</h2><textarea id="journalReflection" placeholder="できたこと、難しかったこと"></textarea><h2>子どもの変化・思い出</h2><textarea id="journalGrowth" placeholder="好きだった本、言葉、反応など"></textarea><h2>親からひとこと</h2><textarea id="journalMessage" placeholder="未来に残したい言葉"></textarea><button id="saveJournal">今月の文章を保存</button><p id="journalSaved"></p></div>
+<div class="card"><h2>今月の写真</h2><input id="journalPhotos" type="file" accept="image/*" multiple><button id="addJournalPhotos">写真を追加</button><p><small>写真はこの端末内に保存します。販売版ではクラウド保存へ移行予定です。</small></p><div id="journalPhotoGrid" class="photo-grid"></div></div>
+<div class="card"><h2>年間の読書記録</h2><p>月ごとの目標・振り返り・写真と、読み聞かせ回数を1年分まとめます。</p><label>年<input id="journalYear" type="number" min="2020" max="2100"></label><div class="monthly-actions"><button id="annualPreview">年間記録を表示</button><button id="annualPrint">印刷・PDF保存</button></div><p><small>iPhoneでは印刷画面からPDFとして保存できます。</small></p></div></section>
 <section id="recommend" class="page"><h1>おすすめ</h1><div class="card"><h2>今月伸ばしたいジャンル</h2><div id="focusGenres"></div><p>少ないジャンルと、親が伸ばしたいジャンルを分けて扱います。</p></div><div class="card"><h2>今月の推奨図書</h2><div id="recEditor"></div></div></section>
 <section id="analysis" class="page"><h1>分析</h1><div class="card"><h2>ジャンル別読み聞かせ</h2><div id="analysisGenres"></div></div><div class="card"><h2>冊数と回数</h2><div id="breadthDepth"></div></div></section>
 <section id="register" class="page"><h1>本を登録</h1><div class="card"><p>家にある本のISBNを読み取って、所有本へ登録します。</p><video id="registerVideo" playsinline muted></video><button id="startRegisterScan">カメラで読む</button><button id="stopRegisterScan">停止</button><div id="registerState"></div><div id="registerResult"></div></div></section>
 <section id="shop" class="page"><h1>店頭チェック</h1><div class="card"><p>BOOKOFFなどでISBNを読み取り、所有済みかすぐ確認します。</p><video id="shopVideo" playsinline muted></video><button id="startShopScan">カメラで読む</button><button id="stopShopScan">停止</button><div id="shopState"></div><div id="shopResult"></div></div></section>
-<section id="settings" class="page"><h1>設定</h1><div class="card"><h2>子ども</h2><label>ニックネーム<input id="childName"></label><label>生年月日<input id="birthDate" type="date"></label></div><div class="card"><h2>読み聞かせ目標</h2><label>目標回数<input id="goalInput" type="number"></label><label>目標日<input id="goalDate" type="date"></label>
+<section id="library" class="page"><h1>図書館</h1>
+<div class="card"><h2>予約候補</h2><p>本棚から追加した本をまとめて確認できます。</p><div id="libraryCandidates"></div></div>
+<div class="card"><h2>使い方</h2><p>「いつもの図書館」で図書館サイトを開きます。本のISBNまたはタイトルは自動でコピーします。蔵書がない場合は「他の図書館」で横断検索できます。</p></div></section><section id="settings" class="page"><h1>設定</h1><div class="card"><h2>子ども</h2><label>ニックネーム<input id="childName"></label><label>生年月日<input id="birthDate" type="date"></label></div><div class="card"><h2>読み聞かせ目標</h2><label>目標回数<input id="goalInput" type="number"></label><label>目標日<input id="goalDate" type="date"></label>
 <button id="thirdBirthday">3歳の誕生日を目標日にする</button>
 <label>現在の累計回数（初回設定・補正用）<input id="baselineReads" type="number" min="0"></label>
 <small>ミーテ取込後は「この基準値＋取り込んだ読み聞かせ回数」で計算します。</small>
-<h3>読む日</h3><label><input id="wk" type="checkbox"> 平日（月〜金・祝日除外）</label><label><input id="sat" type="checkbox"> 土曜</label><label><input id="hol" type="checkbox"> 日曜・祝日</label><button id="saveSettings">保存</button></div><div class="card"><h2>利用図書館</h2><input id="libraryName" placeholder="例：さいたま市図書館"><button id="saveLibrary">保存</button></div></section>
+<h3>読む日</h3><label><input id="wk" type="checkbox"> 平日（月〜金・祝日除外）</label><label><input id="sat" type="checkbox"> 土曜</label><label><input id="hol" type="checkbox"> 日曜・祝日</label><button id="saveSettings">保存</button></div><div class="card"><h2>利用図書館</h2>
+<label>いつもの図書館<input id="libraryName" placeholder="例：さいたま市図書館"></label>
+<label>図書館サイト<input id="libraryUrl" placeholder="https://..."></label>
+<label>利用者カード番号<input id="libraryCard" autocomplete="username" placeholder="任意"></label>
+<p><small>パスワードはアプリ内には保存しません。図書館サイト側で端末のパスワード保存機能をご利用ください。</small></p>
+<button id="saveLibrary">保存</button></div></section>
 </main>
-<nav><button data-go="home">ホーム</button><button data-go="bookshelf">本棚</button><button data-go="records">読書記録</button><button data-go="recommend">おすすめ</button><button data-go="analysis">分析</button><button data-go="register">本を登録</button><button data-go="shop">店頭チェック</button></nav>
-<script src="https://unpkg.com/@zxing/browser@latest"></script><script src="/client.js?v=isbn-autofix-20260925"></script></body></html>
+<nav><button data-go="home">ホーム</button><button data-go="bookshelf">本棚</button><button data-go="records">読書記録</button><button data-go="monthly">月間記録</button><button data-go="recommend">おすすめ</button><button data-go="analysis">分析</button><button data-go="library">図書館</button><button data-go="register">本を登録</button><button data-go="shop">店頭チェック</button></nav>
+<script src="https://unpkg.com/@zxing/browser@latest"></script><script src="/client.js?v=library-candidates-20260925"></script></body></html>
