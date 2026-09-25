@@ -4652,8 +4652,8 @@
     "genreTags": [],
     "kumonLevel": "",
     "owned": true,
-    "status": "タイトル確認済",
-    "notes": "2026/9/25 写真から確認。書誌詳細は未確認"
+    "status": "一部確認",
+    "notes": "先日追加8冊・写真確認"
   },
   {
     "id": "OWN-0316",
@@ -4661,13 +4661,15 @@
     "author": "田畑豊",
     "illustrator": "安達加奈子",
     "translator": "",
-    "publisher": "",
+    "publisher": "BeeBooks",
     "isbn": "",
-    "genreTags": [],
+    "genreTags": [
+      "季節・行事"
+    ],
     "kumonLevel": "",
     "owned": true,
-    "status": "タイトル確認済",
-    "notes": "2026/9/25 写真から確認。書誌詳細は未確認"
+    "status": "一部確認",
+    "notes": "先日追加8冊・写真確認"
   },
   {
     "id": "OWN-0317",
@@ -4677,11 +4679,13 @@
     "translator": "",
     "publisher": "Toda design",
     "isbn": "",
-    "genreTags": [],
+    "genreTags": [
+      "色・日本文化"
+    ],
     "kumonLevel": "",
     "owned": true,
-    "status": "タイトル確認済",
-    "notes": "2026/9/25 写真から確認。書誌詳細は未確認"
+    "status": "一部確認",
+    "notes": "先日追加8冊・写真確認"
   },
   {
     "id": "OWN-0318",
@@ -4689,13 +4693,15 @@
     "author": "いわむらかずお",
     "illustrator": "",
     "translator": "",
-    "publisher": "",
+    "publisher": "童心社",
     "isbn": "",
-    "genreTags": [],
+    "genreTags": [
+      "物語・自然"
+    ],
     "kumonLevel": "",
     "owned": true,
-    "status": "タイトル確認済",
-    "notes": "2026/9/25 ユーザー確認"
+    "status": "一部確認",
+    "notes": "先日追加8冊・ユーザーがタイトル確定"
   },
   {
     "id": "OWN-0319",
@@ -4705,11 +4711,13 @@
     "translator": "",
     "publisher": "Random House",
     "isbn": "",
-    "genreTags": [],
+    "genreTags": [
+      "英語・乗り物"
+    ],
     "kumonLevel": "",
     "owned": true,
-    "status": "タイトル確認済",
-    "notes": "2026/9/25 写真から確認。書誌詳細は未確認"
+    "status": "一部確認",
+    "notes": "先日追加8冊・写真確認"
   },
   {
     "id": "OWN-0320",
@@ -4719,11 +4727,13 @@
     "translator": "",
     "publisher": "Platt & Munk",
     "isbn": "",
-    "genreTags": [],
+    "genreTags": [
+      "英語・物語"
+    ],
     "kumonLevel": "",
     "owned": true,
-    "status": "タイトル確認済",
-    "notes": "2026/9/25 写真から確認。書誌詳細は未確認"
+    "status": "一部確認",
+    "notes": "先日追加8冊・写真確認"
   },
   {
     "id": "OWN-0321",
@@ -4733,11 +4743,13 @@
     "translator": "",
     "publisher": "Random House",
     "isbn": "",
-    "genreTags": [],
+    "genreTags": [
+      "英語・乗り物"
+    ],
     "kumonLevel": "",
     "owned": true,
-    "status": "タイトル確認済",
-    "notes": "2026/9/25 写真から確認。書誌詳細は未確認"
+    "status": "一部確認",
+    "notes": "先日追加8冊・写真確認"
   },
   {
     "id": "OWN-0322",
@@ -4747,10 +4759,188 @@
     "translator": "",
     "publisher": "リーバン",
     "isbn": "",
-    "genreTags": [],
+    "genreTags": [
+      "時計・知育"
+    ],
     "kumonLevel": "",
     "owned": true,
-    "status": "タイトル・出版社確認済",
-    "notes": "2026/9/25 ユーザー確認"
+    "status": "一部確認",
+    "notes": "先日追加8冊・ユーザーがタイトル/出版社確定"
+  },
+  {
+    "id": "OWN-0323",
+    "title": "あんぱんまんとばいきんまん",
+    "author": "やなせたかし",
+    "illustrator": "やなせたかし",
+    "translator": "",
+    "publisher": "フレーベル館",
+    "isbn": "",
+    "genreTags": [
+      "物語"
+    ],
+    "kumonLevel": "",
+    "owned": true,
+    "status": "一部確認",
+    "notes": "2026/9/24 BOOKOFF購入・ユーザー確認"
+  },
+  {
+    "id": "OWN-0324",
+    "title": "14ひきのせんたく",
+    "author": "いわむらかずお",
+    "illustrator": "",
+    "translator": "",
+    "publisher": "童心社",
+    "isbn": "",
+    "genreTags": [
+      "物語・自然"
+    ],
+    "kumonLevel": "",
+    "owned": true,
+    "status": "一部確認",
+    "notes": "2026/9/24 BOOKOFF購入・ユーザー確認"
+  },
+  {
+    "id": "OWN-0325",
+    "title": "そらまめくんのベッド",
+    "author": "なかやみわ",
+    "illustrator": "なかやみわ",
+    "translator": "",
+    "publisher": "福音館書店",
+    "isbn": "",
+    "genreTags": [
+      "物語"
+    ],
+    "kumonLevel": "",
+    "owned": true,
+    "status": "一部確認",
+    "notes": "2026/9/24 BOOKOFF購入・ユーザー確認"
+  },
+  {
+    "id": "OWN-0326",
+    "title": "そらいろのたね",
+    "author": "中川李枝子",
+    "illustrator": "大村百合子",
+    "translator": "",
+    "publisher": "福音館書店",
+    "isbn": "",
+    "genreTags": [
+      "物語"
+    ],
+    "kumonLevel": "",
+    "owned": true,
+    "status": "一部確認",
+    "notes": "2026/9/24 BOOKOFF購入・ユーザー確認"
+  },
+  {
+    "id": "OWN-0327",
+    "title": "もりのなか",
+    "author": "マリー・ホール・エッツ",
+    "illustrator": "マリー・ホール・エッツ",
+    "translator": "",
+    "publisher": "福音館書店",
+    "isbn": "",
+    "genreTags": [
+      "物語"
+    ],
+    "kumonLevel": "",
+    "owned": true,
+    "status": "一部確認",
+    "notes": "2026/9/24 BOOKOFF購入・ユーザー確認"
+  },
+  {
+    "id": "OWN-0328",
+    "title": "頭のいい子が育つ クラシックの名曲45選",
+    "author": "新井鴎子",
+    "illustrator": "",
+    "translator": "",
+    "publisher": "新星出版社",
+    "isbn": "",
+    "genreTags": [
+      "音楽"
+    ],
+    "kumonLevel": "",
+    "owned": true,
+    "status": "一部確認",
+    "notes": "2026/9/24 BOOKOFF購入・ユーザー確認"
+  },
+  {
+    "id": "OWN-0329",
+    "title": "ダース・ヴェイダーとプリンセス・レイア",
+    "author": "ジェフリー・ブラウン",
+    "illustrator": "",
+    "translator": "",
+    "publisher": "辰巳出版",
+    "isbn": "",
+    "genreTags": [
+      "物語"
+    ],
+    "kumonLevel": "",
+    "owned": true,
+    "status": "一部確認",
+    "notes": "2026/9/24 BOOKOFF購入・ユーザー確認"
+  },
+  {
+    "id": "OWN-0330",
+    "title": "はるにれ",
+    "author": "姉崎一馬",
+    "illustrator": "",
+    "translator": "",
+    "publisher": "福音館書店",
+    "isbn": "",
+    "genreTags": [
+      "自然・写真"
+    ],
+    "kumonLevel": "",
+    "owned": true,
+    "status": "一部確認",
+    "notes": "2026/9/24 BOOKOFF購入・ユーザー確認"
+  },
+  {
+    "id": "OWN-0331",
+    "title": "あいうえおさま",
+    "author": "寺村輝夫",
+    "illustrator": "和歌山静子",
+    "translator": "",
+    "publisher": "理論社",
+    "isbn": "",
+    "genreTags": [
+      "ことば・リズム"
+    ],
+    "kumonLevel": "",
+    "owned": true,
+    "status": "一部確認",
+    "notes": "2026/9/24 BOOKOFF購入・ユーザー確認"
+  },
+  {
+    "id": "OWN-0332",
+    "title": "とこちゃんはどこ",
+    "author": "松岡享子",
+    "illustrator": "加古里子",
+    "translator": "",
+    "publisher": "福音館書店",
+    "isbn": "",
+    "genreTags": [
+      "物語"
+    ],
+    "kumonLevel": "",
+    "owned": true,
+    "status": "一部確認",
+    "notes": "2026/9/24 BOOKOFF購入・ユーザー確認"
+  },
+  {
+    "id": "OWN-0333",
+    "title": "もこもこもこ",
+    "author": "谷川俊太郎",
+    "illustrator": "元永定正",
+    "translator": "",
+    "publisher": "文研出版",
+    "isbn": "",
+    "genreTags": [
+      "ことば・リズム"
+    ],
+    "kumonLevel": "",
+    "owned": true,
+    "status": "一部確認",
+    "notes": "2026/9/24 BOOKOFF購入・ユーザー確認"
   }
 ]

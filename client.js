@@ -4,19 +4,47 @@ const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{retur
 let profile=load(KEYS.profile,{name:'',birthDate:''}), goal=load(KEYS.goal,{target:30000,targetDate:'',weekdays:true,saturday:false,sunHoliday:false});
 let books=load(KEYS.books,[]), reads=load(KEYS.reads,[]), plan=load(KEYS.plan,{focus:[],recommended:[]});
 async function ensureMasterBooks(){
-  const master=await fetch('/initial_books.json',{cache:'no-store'}).then(r=>r.json()).catch(()=>[]);
-  if(!Array.isArray(master)||!master.length)return;
-  const byId=new Map(books.map(b=>[b.id,b]));
-  const byIsbn=new Map(books.filter(b=>b.isbn).map(b=>[String(b.isbn),b]));
-  const byTitle=new Map(books.map(b=>[String(b.title||'').normalize('NFKC'),b]));
-  for(const m of master){
-    const hit=byId.get(m.id)||(m.isbn&&byIsbn.get(String(m.isbn)))||byTitle.get(String(m.title||'').normalize('NFKC'));
-    if(hit) Object.assign(hit,m,{readCount:hit.readCount??m.readCount??0});
-    else books.push({...m,readCount:0});
-  }
-  save(KEYS.books,books);
+  try{
+    const res=await fetch('/initial_books.json?v=333-20260925',{cache:'no-store'});
+    if(!res.ok) return;
+    const master=await res.json();
+    const current=books();
+    const norm=s=>String(s||'').trim().toLowerCase().replace(/\s+/g,'');
+    const byId=new Map(current.filter(b=>b.id).map(b=>[String(b.id),b]));
+    const byIsbn=new Map(current.filter(b=>b.isbn).map(b=>[String(b.isbn).replace(/\D/g,''),b]));
+    const byTitle=new Map();
+    current.forEach(b=>{
+      const k=norm(b.title);
+      if(k && !byTitle.has(k)) byTitle.set(k,b);
+    });
+
+    // Master rows are authoritative and are never collapsed by duplicate title.
+    const merged=master.map(m=>{
+      const hit=byId.get(String(m.id||'')) ||
+        (m.isbn ? byIsbn.get(String(m.isbn).replace(/\D/g,'')) : null) ||
+        byTitle.get(norm(m.title));
+      return {
+        ...m,
+        readCount: hit?.readCount ?? m.readCount ?? 0,
+        lastReadAt: hit?.lastReadAt ?? m.lastReadAt ?? null
+      };
+    });
+
+    // Preserve user-added books that are not part of the 333-book master.
+    const masterIds=new Set(master.map(m=>String(m.id||'')));
+    const masterIsbns=new Set(master.filter(m=>m.isbn).map(m=>String(m.isbn).replace(/\D/g,'')));
+    current.forEach(b=>{
+      const id=String(b.id||'');
+      const isbn=String(b.isbn||'').replace(/\D/g,'');
+      if((id && masterIds.has(id)) || (isbn && masterIsbns.has(isbn))) return;
+      // Avoid preserving an old local copy when it is clearly the same title.
+      if(master.some(m=>norm(m.title)===norm(b.title))) return;
+      merged.push(b);
+    });
+    saveBooks(merged);
+  }catch(e){ console.warn('master merge skipped',e); }
 }
-const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
 function go(id){$$('.page').forEach(x=>x.classList.toggle('active',x.id===id));scrollTo(0,0);render()} $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
 function totalReads(){return reads.reduce((a,r)=>a+(+r.count||0),0)}
 function ymd(d){return d.toISOString().slice(0,10)}
