@@ -37,8 +37,46 @@ function isJPWeekday(d){let w=d.getDay();return w>=1&&w<=5} // Holiday calendar 
 function eligibleDays(from,to){let n=0,d=new Date(from);d.setHours(12,0,0,0);let end=new Date(to);end.setHours(12,0,0,0);for(;d<=end;d.setDate(d.getDate()+1)){let w=d.getDay();if((w>=1&&w<=5&&goal.weekdays)||(w===6&&goal.saturday)||(w===0&&goal.sunHoliday))n++}return n}
 function genresForMonth(){let now=new Date(), ym=now.toISOString().slice(0,7), m={};reads.filter(r=>String(r.date||'').startsWith(ym)).forEach(r=>{let b=books.find(x=>x.id===r.bookId)||{};(b.genreTags||['未分類']).forEach(g=>m[g]=(m[g]||0)+(+r.count||0))});return m}
 function renderGenres(el){let m=genresForMonth(),sum=Object.values(m).reduce((a,b)=>a+b,0)||1, arr=Object.entries(m).sort((a,b)=>b[1]-a[1]);el.innerHTML=arr.length?arr.map(([g,n])=>`<div class="genre"><span><b>${esc(g)}</b><small>${n}回・${Math.round(n/sum*100)}%</small></span><div class="mini"><i style="width:${n/sum*100}%"></i></div></div>`).join(''):'まだ今月の記録がありません。';return arr}
+
+function safeShelfBoot(){
+  try{
+    const hard=(window.HARD_MASTER_333&&Array.isArray(window.HARD_MASTER_333))?window.HARD_MASTER_333:[];
+    if(!Array.isArray(books)||books.length===0){
+      books=hard.map((m,i)=>({...m,id:String(m.id||("MASTER-"+(i+1))),owned:true}));
+      try{save(KEYS.books,books)}catch(_){}
+    }
+    const shelf=document.getElementById('shelf');
+    if(!shelf)return;
+    const st=document.getElementById('shelfBootStatus');
+    if(st)st.innerHTML='<b>本棚 '+books.length+'冊</b>';
+    const count=shelf.querySelector('[data-shelf-count]')||document.getElementById('shelfCount');
+    if(count)count.textContent=books.length+'冊';
+    // If normal controls/list were not created, create a self-contained fallback.
+    let search=document.getElementById('bookSearch');
+    if(!search){
+      const box=document.createElement('div');
+      box.id='shelfRecovery';
+      box.innerHTML='<div class="card"><b id="recoveryCount"></b><input id="recoverySearch" placeholder="タイトル・作者・出版社・ISBNで検索"><div class="shelfTools"><button id="recoveryBulk">☑ まとめて編集</button><button id="recoveryTag">＋ タグ作成</button></div><div id="recoveryTags"></div></div><div id="recoveryList"></div>';
+      shelf.appendChild(box);
+    }
+    function draw(){
+      const q=(document.getElementById('recoverySearch')?.value||'').toLowerCase();
+      const a=books.filter(b=>[b.title,b.author,b.publisher,b.isbn,(b.tags||[]).join(' ')].join(' ').toLowerCase().includes(q));
+      const c=document.getElementById('recoveryCount'); if(c)c.textContent='本棚 '+books.length+'冊';
+      const list=document.getElementById('recoveryList'); if(!list)return;
+      list.innerHTML=a.map(b=>'<div class="book recoveryBook" data-rid="'+esc(b.id)+'"><b>'+(b.favorite?'★ ':'')+esc(b.title||'')+'</b><small>'+esc(b.author||'作者未登録')+'｜'+esc(b.publisher||'出版社未登録')+'</small>'+((b.tags||[]).length?'<div class="tagline">'+b.tags.map(t=>'#'+esc(t)).join(' ')+'</div>':'')+'</div>').join('');
+      document.querySelectorAll('.recoveryBook').forEach(x=>x.onclick=()=>{try{editBook(x.dataset.rid)}catch(_){}});
+    }
+    const rs=document.getElementById('recoverySearch'); if(rs)rs.oninput=draw;
+    const rt=document.getElementById('recoveryTag'); if(rt)rt.onclick=()=>{const t=prompt('新しいタグ名');if(t){try{mkTag(t)}catch(_){};draw()}};
+    draw();
+  }catch(err){
+    const shelf=document.getElementById('shelf');
+    if(shelf)shelf.insertAdjacentHTML('beforeend','<div class="card"><b>本棚データの表示エラー</b><p>'+String(err.message||err)+'</p></div>');
+  }
+}
+
 async function boot(){await ensureMasterBooks();$$('.page').forEach(x=>x.hidden=!x.classList.contains('active'));render()
-initNext();
 } 
 function render(){
  renderLibraryCandidates();
@@ -234,3 +272,8 @@ $('#stopRegisterScan').onclick=()=>{if(registerCtl)registerCtl.stop();registerCt
 $('#startShopScan').onclick=()=>startScanner('shopVideo',handleShop,'shopState','shop');
 $('#stopShopScan').onclick=()=>{if(shopCtl)shopCtl.stop();shopCtl=null;$('#shopState').textContent='停止しました'};
 boot();
+window.addEventListener('DOMContentLoaded',()=>{
+  setTimeout(()=>{try{safeShelfBoot()}catch(e){console.error(e)}},0);
+  setTimeout(()=>{try{initNext()}catch(e){console.error("optional UI",e)}},50);
+  setTimeout(()=>{try{safeShelfBoot()}catch(e){console.error(e)}},100);
+});
