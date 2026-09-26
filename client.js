@@ -1,8 +1,8 @@
 (()=>{"use strict";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const MASTER=Array.isArray(window.MASTER_333)?window.MASTER_333:[];
+const MASTER=Array.isArray(window.MASTER_BOOKS)?window.MASTER_BOOKS:[];
 const KEY="kenchan_clean_overrides_v1", TAGKEY="kenchan_clean_tags_v1";
-let overrides={}, tags=[], filter="all", ageFilter="all", bulk=false, selected=new Set();
+let overrides={}, tags=[], filter="all", ageFilter="all", programFilter="all", completeFilter="all", bulk=false, selected=new Set();
 try{overrides=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){}
 try{tags=JSON.parse(localStorage.getItem(TAGKEY)||"[]")||[]}catch(e){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(overrides));localStorage.setItem(TAGKEY,JSON.stringify(tags))}catch(e){}};
@@ -25,12 +25,15 @@ function renderEditChecks(b){
   $("#editTagChecks").innerHTML=allTags().map(t=>`<label><input type="checkbox" data-etag="${esc(t)}" ${(b.tags||[]).includes(t)?"checked":""}>${esc(t)}</label>`).join("")||"<small>タグはまだありません。</small>";
 }
 function drawTags(){let a=allTags();$("#tagTabs").innerHTML=[["all","すべて"],["favorite","★お気に入り"],...a.map(t=>[t,t])].map(([v,l])=>`<button data-filter="${esc(v)}" class="${filter===v?"active":""}">${esc(l)}</button>`).join("");$("#bulkTag").innerHTML=a.map(t=>`<option>${esc(t)}</option>`).join("");$$("[data-filter]").forEach(x=>x.onclick=()=>{filter=x.dataset.filter;draw()})}
-function draw(){let a=books(),q=$("#search").value.trim().toLowerCase();a=a.filter(b=>[b.title,b.author,b.publisher,b.isbn,(b.tags||[]).join(" "),agesOf(b).join(" ")].join(" ").toLowerCase().includes(q));if(ageFilter!=="all")a=a.filter(b=>agesOf(b).includes(ageFilter));if(filter==="favorite")a=a.filter(b=>b.favorite);else if(filter!=="all")a=a.filter(b=>(b.tags||[]).includes(filter));$("#count").textContent=`${books().length}冊（表示 ${a.length}冊）`;drawAges();$("#status").innerHTML=MASTER.length===333?"✓ 333冊の蔵書マスターを読み込みました。":"蔵書マスターの読み込みに問題があります。";drawTags();$("#list").innerHTML=a.map(b=>`<div class="book">${bulk?`<input class="pick" type="checkbox" data-pick="${esc(b.id)}" ${selected.has(b.id)?"checked":""}>`:""}<div class="bookmain" data-edit="${esc(b.id)}"><b>${b.favorite?"★ ":""}${esc(b.title)}</b><small>${esc(b.author||"作者未登録")}｜${esc(b.publisher||"出版社未登録")}</small>${(b.tags||[]).length?`<div class="tagline">${b.tags.map(t=>"#"+esc(t)).join(" ")}</div>`:""}</div></div>`).join("");$$("[data-edit]").forEach(x=>x.onclick=()=>{if(!bulk)openEdit(x.dataset.edit)});$$("[data-pick]").forEach(x=>x.onchange=()=>{x.checked?selected.add(x.dataset.pick):selected.delete(x.dataset.pick);$("#selected").textContent=selected.size+"冊"})}
-function openEdit(id){let b=books().find(x=>x.id===id);if(!b)return;$("#eid").value=id;$("#etitle").value=b.title||"";$("#eauthor").value=b.author||"";$("#epublisher").value=b.publisher||"";$("#eisbn").value=b.isbn||"";renderEditChecks(b);$("#efav").checked=!!b.favorite;$("#enotes").value=b.notes||"";$("#edit").showModal()}
-$("#save").onclick=()=>{let id=$("#eid").value, nt=$$("[data-etag]:checked").map(x=>x.dataset.etag), na=$$("[data-eage]:checked").map(x=>x.dataset.eage);nt.forEach(t=>{if(!tags.includes(t))tags.push(t)});overrides[id]={...(overrides[id]||{}),title:$("#etitle").value.trim(),author:$("#eauthor").value.trim(),publisher:$("#epublisher").value.trim(),isbn:$("#eisbn").value.replace(/\D/g,""),ages:na,tags:nt,favorite:$("#efav").checked,notes:$("#enotes").value.trim()};save();$("#edit").close();draw()};
-$("#cancel").onclick=()=>$("#edit").close();
+function dataComplete(b){if(b.dataComplete===true)return true;const i=normIsbn(b.isbn),j=normIsbn(b.jan2);return !!(b.title&&b.author&&b.publisher&&i.length===13&&(i.startsWith("978")||i.startsWith("979"))&&j.length===13&&j.startsWith("192"))}
+function programBadges(b){let a=[];if(b.kumon)a.push(`<span class="program-badge">KUMON ${esc(b.kumon)}</span>`);if(b.kaho)a.push(`<span class="program-badge">${esc(b.kaho)}</span>`);if(b.ownership==="仮所有")a.push(`<span class="program-badge">仮所有</span>`);a.push(`<span class="data-badge ${dataComplete(b)?"complete":""}">${dataComplete(b)?"データ完了":"データ未完了"}</span>`);return `<div class="program-badges">${a.join("")}</div>`}
+function draw(){let a=books(),q=$("#search").value.trim().toLowerCase();a=a.filter(b=>[b.title,b.author,b.publisher,b.isbn,b.jan2,b.ccode,b.listPrice,b.kumon,b.kaho,b.ownership,(b.tags||[]).join(" "),agesOf(b).join(" ")].join(" ").toLowerCase().includes(q));if(ageFilter!=="all")a=a.filter(b=>agesOf(b).includes(ageFilter));if(programFilter==="kumon")a=a.filter(b=>!!b.kumon);else if(programFilter==="kaho")a=a.filter(b=>!!b.kaho);else if(["5A","4A","3A","2A"].includes(programFilter))a=a.filter(b=>b.kumon===programFilter);else if(programFilter==="すくすく館"||programFilter==="なかよし館")a=a.filter(b=>(b.kaho||"").includes(programFilter));if(completeFilter==="incomplete")a=a.filter(b=>!dataComplete(b));else if(completeFilter==="complete")a=a.filter(dataComplete);if(filter==="favorite")a=a.filter(b=>b.favorite);else if(filter!=="all")a=a.filter(b=>(b.tags||[]).includes(filter));$("#count").textContent=`${books().length}冊（表示 ${a.length}冊）`;drawAges();$("#status").innerHTML=MASTER.length===373?"✓ 373冊の最新蔵書マスター（KUMON・家庭保育園）を読み込みました。":"蔵書マスターの読み込みに問題があります。";drawTags();$("#list").innerHTML=a.map(b=>`<div class="book">${bulk?`<input class="pick" type="checkbox" data-pick="${esc(b.id)}" ${selected.has(b.id)?"checked":""}>`:""}<div class="bookmain" data-edit="${esc(b.id)}"><b>${b.favorite?"★ ":""}${esc(b.title)}</b><small>${esc(b.author||"作者未登録")}｜${esc(b.publisher||"出版社未登録")}</small>${programBadges(b)}${(b.tags||[]).length?`<div class="tagline">${b.tags.map(t=>"#"+esc(t)).join(" ")}</div>`:""}</div></div>`).join("");$$("[data-edit]").forEach(x=>x.onclick=()=>{if(!bulk)openEdit(x.dataset.edit)});$$("[data-pick]").forEach(x=>x.onchange=()=>{x.checked?selected.add(x.dataset.pick):selected.delete(x.dataset.pick);$("#selected").textContent=selected.size+"冊"})}
+function parseJan2(n){n=normIsbn(n);if(n.length!==13||!n.startsWith("192"))return null;return {jan2:n,ccode:"C"+n.slice(3,7),price:String(parseInt(n.slice(7,12),10)||0)}}
+function openEdit(id){let b=books().find(x=>x.id===id);if(!b)return;$("#eid").value=id;$("#etitle").value=b.title||"";$("#eauthor").value=b.author||"";$("#epublisher").value=b.publisher||"";$("#eisbn").value=b.isbn||"";$("#ejan2").value=b.jan2||"";$("#eccode").value=b.ccode||"";$("#eprice").value=b.listPrice||"";$("#editCodeMsg").textContent="";$("#programInfo").textContent=[b.kumon?"KUMON "+b.kumon:"",b.kaho||"",b.ownership||""].filter(Boolean).join(" ｜ ")||"推薦区分なし";renderEditChecks(b);$("#efav").checked=!!b.favorite;$("#enotes").value=b.notes||"";$("#edit").showModal()}
+$("#save").onclick=()=>{let id=$("#eid").value, nt=$$("[data-etag]:checked").map(x=>x.dataset.etag), na=$$("[data-eage]:checked").map(x=>x.dataset.eage);nt.forEach(t=>{if(!tags.includes(t))tags.push(t)});overrides[id]={...(overrides[id]||{}),title:$("#etitle").value.trim(),author:$("#eauthor").value.trim(),publisher:$("#epublisher").value.trim(),isbn:$("#eisbn").value.replace(/\D/g,""),jan2:$("#ejan2").value.replace(/\D/g,""),ccode:$("#eccode").value.trim(),listPrice:$("#eprice").value.replace(/\D/g,""),ages:na,tags:nt,favorite:$("#efav").checked,notes:$("#enotes").value.trim()};save();$("#edit").close();draw()};
+$("#cancel").onclick=async()=>{await stopEditCamera();$("#edit").close()};
 $("#editNewTag").onclick=()=>{let t=(prompt("新しいタグ名")||"").trim();if(t&&!tags.includes(t)){tags.push(t);save()}let b=books().find(x=>x.id===$("#eid").value);if(b)renderEditChecks(b)};
-$("#deleteBook").onclick=()=>{let id=$("#eid").value,b=books().find(x=>x.id===id);if(!b)return;if(confirm(`「${b.title}」を本棚から削除しますか？`)){overrides[id]={...(overrides[id]||{}),deleted:true};save();$("#edit").close();draw()}};$("#search").oninput=draw;
+$("#deleteBook").onclick=()=>{let id=$("#eid").value,b=books().find(x=>x.id===id);if(!b)return;if(confirm(`「${b.title}」を本棚から削除しますか？`)){overrides[id]={...(overrides[id]||{}),deleted:true};save();$("#edit").close();draw()}};$("#search").oninput=draw;$("#programFilter").onchange=e=>{programFilter=e.target.value;draw()};$("#completeFilter").onchange=e=>{completeFilter=e.target.value;draw()};
 $("#newTag").onclick=()=>{let t=prompt("新しいタグ名");t=(t||"").trim();if(t&&!tags.includes(t)){tags.push(t);save();draw()}};
 $("#bulkOn").onclick=()=>{bulk=true;selected.clear();$("#bulkBar").hidden=false;draw()};$("#bulkOff").onclick=()=>{bulk=false;selected.clear();$("#bulkBar").hidden=true;draw()};
 function bulkAge(remove){let a=$("#bulkAge").value;if(!a)return;selected.forEach(id=>{let b=books().find(x=>x.id===id), ar=agesOf(b);ar=remove?ar.filter(x=>x!==a):[...new Set([...ar,a])];overrides[id]={...(overrides[id]||{}),ages:ar}});save();draw()}
@@ -120,6 +123,26 @@ $("#shopClose").onclick=async()=>{await stopShopCamera();$("#shopCheck").close()
 $("#shopSearch").onclick=()=>showShopResult($("#shopIsbn").value);
 $("#shopIsbn").addEventListener("keydown",e=>{if(e.key==="Enter")showShopResult(e.target.value)});
 $("#startScan").onclick=()=>{try{Promise.resolve(startShopCamera()).catch(()=>alert("カメラ機能を開始できませんでした。ISBNの手入力は利用できます。"))}catch(e){alert("カメラ機能を開始できませんでした。ISBNの手入力は利用できます。")}};$("#shopCheck").addEventListener("close",stopShopCamera);
+
+let editControls=null,editScanning=false;
+async function stopEditCamera(){editScanning=false;try{if(editControls)editControls.stop()}catch(e){}editControls=null;const v=$("#editBarcodeVideo");if(v){try{v.pause()}catch(e){}try{v.srcObject=null}catch(e){}}const a=$("#editCameraArea");if(a)a.hidden=true}
+async function startEditCamera(){
+ if(editScanning)return;
+ if(!navigator.mediaDevices?.getUserMedia){alert("このブラウザではカメラを利用できません。");return}
+ if(!(await loadZXing())){alert("バーコード読取機能を読み込めませんでした。");return}
+ editScanning=true;$("#editCameraArea").hidden=false;$("#editCodeMsg").textContent="978/979（ISBN）または192コードにカメラを向けてください。";
+ try{
+  const reader=new ZXingBrowser.BrowserMultiFormatReader();
+  editControls=await reader.decodeFromConstraints({audio:false,video:{facingMode:{ideal:"environment"}}},$("#editBarcodeVideo"),(result,error,controls)=>{
+   if(!result)return;const n=normIsbn(typeof result.getText==="function"?result.getText():(result.text||""));
+   if(n.length===13&&(n.startsWith("978")||n.startsWith("979"))){$("#eisbn").value=n;$("#editCodeMsg").textContent="ISBNを読み取りました。続けて192コードも読み取れます。";return}
+   const p=parseJan2(n);if(p){$("#ejan2").value=p.jan2;$("#eccode").value=p.ccode;$("#eprice").value=p.price;$("#editCodeMsg").textContent=`192コードを読み取りました：${p.ccode}／本体価格 ${Number(p.price).toLocaleString()}円`;return}
+  });
+ }catch(e){await stopEditCamera();alert("カメラを起動できませんでした。iPhoneのカメラ許可を確認してください。");}
+}
+const editScan=$("#editScanCode");if(editScan)editScan.onclick=()=>{try{Promise.resolve(startEditCamera()).catch(()=>alert("カメラ機能を開始できませんでした。"))}catch(e){alert("カメラ機能を開始できませんでした。")}};
+$("#ejan2").addEventListener("input",e=>{const p=parseJan2(e.target.value);if(p){$("#eccode").value=p.ccode;$("#eprice").value=p.price}});
+$("#edit").addEventListener("close",stopEditCamera);
 
 draw();
 })();
