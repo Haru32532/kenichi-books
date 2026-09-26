@@ -46,6 +46,8 @@ function renderRegisterChecks(){$("#registerAgeChecks").innerHTML=AGE_OPTIONS.ma
 function clearRegister(){["rIsbn","rTitle","rAuthor","rPublisher","rNotes"].forEach(id=>$("#"+id).value="");$("#rFav").checked=false;$("#registerMsg").innerHTML="";renderRegisterChecks()}
 function openRegisterWithIsbn(isbn=""){stopShopCamera();if($("#shopCheck").open)$("#shopCheck").close();clearRegister();$("#rIsbn").value=normIsbn(isbn);$("#registerBook").showModal()}
 $("#openRegister").onclick=()=>{$("#menu").hidden=true;openRegisterWithIsbn("")};$("#registerClose").onclick=()=>$("#registerBook").close();
+async function lookupRegisterBib(){const n=normIsbn($("#rIsbn").value);if(!/^97[89]\d{10}$/.test(n)){$("#registerBibMsg").textContent="13桁のISBNを入力してください。";return}$("#registerBibMsg").textContent="書誌情報を検索中…";try{const b=window.fetchBibData?await window.fetchBibData(n):null;if(!b)throw 0;if(!$("#rTitle").value.trim())$("#rTitle").value=b.title||"";if(!$("#rAuthor").value.trim())$("#rAuthor").value=b.author||"";if(!$("#rPublisher").value.trim())$("#rPublisher").value=b.publisher||"";$("#registerBibMsg").textContent="書誌情報を取得しました。既に入力済みの項目は上書きしていません。"}catch(e){$("#registerBibMsg").textContent="書誌情報を取得できませんでした。"}}
+$("#lookupRegisterBib").onclick=lookupRegisterBib;$("#rIsbn").addEventListener("change",()=>{if(/^97[89]\d{10}$/.test(normIsbn($("#rIsbn").value)))lookupRegisterBib()});
 $("#registerSave").onclick=()=>{const title=$("#rTitle").value.trim(),isbn=normIsbn($("#rIsbn").value);if(!title){$("#registerMsg").innerHTML='<div class="shop-notowned">タイトルを入力してください。</div>';return}if(isbn&&books().some(b=>normIsbn(b.isbn)===isbn)){$("#registerMsg").innerHTML='<div class="shop-notowned">このISBNはすでに本棚に登録されています。</div>';return}userBooks.push({id:"USER-"+Date.now(),title,author:$("#rAuthor").value.trim(),publisher:$("#rPublisher").value.trim(),isbn,ages:$$("[data-rage]:checked").map(x=>x.dataset.rage),tags:$$("[data-rtag]:checked").map(x=>x.dataset.rtag),favorite:$("#rFav").checked,notes:$("#rNotes").value.trim()});saveUserBooks();$("#registerBook").close();draw();alert("本棚に登録しました。")};
 
 let shopStream=null,shopScanning=false; let shopControls=null;
@@ -72,12 +74,15 @@ function loadZXing(){
   });
   return zxingLoadPromise;
 }
-function showShopResult(isbn){
+async function showShopResult(isbn){
  const n=normIsbn(isbn);$("#shopIsbn").value=n;
  if(!(n.length===10||n.length===13)){ $("#shopResult").innerHTML='<div class="shop-empty">ISBNは10桁または13桁で入力してください。</div>';return}
- const b=books().find(x=>normIsbn(x.isbn)===n);
- $("#shopResult").innerHTML=b?`<div class="shop-owned"><div class="shop-status">✓ 所有済み</div><div class="shop-title">${esc(b.title||"")}</div><div class="shop-meta">${esc(b.author||"作者未登録")} ｜ ${esc(b.publisher||"出版社未登録")}</div><div class="shop-meta">ISBN ${esc(n)}</div></div>`:`<div class="shop-notowned"><div class="shop-status">未所有</div><div>このISBNは現在の本棚には登録されていません。</div><div class="shop-meta">ISBN ${esc(n)}</div><button type="button" id="shopToRegister" class="shop-register-btn">この本を登録</button></div>`;
-;const sr=$("#shopToRegister");if(sr)sr.onclick=()=>openRegisterWithIsbn(n)
+ const exact=books().find(x=>normIsbn(x.isbn)===n);
+ if(exact){$("#shopResult").innerHTML=`<div class="shop-owned"><div class="shop-status">✓ 所有済み</div><div class="shop-title">${esc(exact.title||"")}</div><div class="shop-meta">${esc(exact.author||"作者未登録")} ｜ ${esc(exact.publisher||"出版社未登録")}</div><div class="shop-meta">ISBN ${esc(n)}</div></div>`;return}
+ $("#shopResult").innerHTML='<div class="shop-empty">書誌情報と本棚を照合中…</div>';
+ let bib=null;try{bib=window.fetchBibData?await window.fetchBibData(n):null}catch(e){}
+ if(bib?.title){const nt=String(bib.title).normalize('NFKC').toLowerCase().replace(/[\s　・･:：!?！？「」『』（）()【】\[\]ー-]/g,'');const matches=books().filter(x=>String(x.title||'').normalize('NFKC').toLowerCase().replace(/[\s　・･:：!?！？「」『』（）()【】\[\]ー-]/g,'')===nt);if(matches.length===1){const b=matches[0];$("#shopResult").innerHTML=`<div class="shop-owned"><div class="shop-status">✓ 所有済み（タイトル一致）</div><div class="shop-title">${esc(b.title)}</div><div class="shop-meta">ISBNは本棚に未登録でしたが、読み取った本の書誌タイトルと一致しました。</div><button type="button" id="attachShopIsbn" class="shop-register-btn">このISBNをこの本に登録</button></div>`;$("#attachShopIsbn").onclick=()=>{overrides[b.id]={...(overrides[b.id]||{}),isbn:n,author:b.author||bib.author||'',publisher:b.publisher||bib.publisher||''};save();draw();showShopResult(n)};return}}
+ $("#shopResult").innerHTML=`<div class="shop-notowned"><div class="shop-status">未所有</div>${bib?.title?`<div class="shop-title">${esc(bib.title)}</div><div class="shop-meta">${esc(bib.author||'')} ${bib.publisher?'｜ '+esc(bib.publisher):''}</div>`:'<div>本棚に一致する本が見つかりませんでした。</div>'}<div class="shop-meta">ISBN ${esc(n)}</div><button type="button" id="shopToRegister" class="shop-register-btn">この本を登録</button></div>`;const sr=$("#shopToRegister");if(sr)sr.onclick=()=>openRegisterWithIsbn(n)
 }
 async function stopShopCamera(){
   shopScanning=false;
