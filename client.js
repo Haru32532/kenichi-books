@@ -38,5 +38,27 @@ $("#addAge").onclick=()=>bulkAge(false);$("#removeAge").onclick=()=>bulkAge(true
 function bulkTag(remove){let t=$("#bulkTag").value;if(!t)return;selected.forEach(id=>{let b=books().find(x=>x.id===id), a=[...(b?.tags||[])];a=remove?a.filter(x=>x!==t):[...new Set([...a,t])];overrides[id]={...(overrides[id]||{}),tags:a}});save();draw()}
 $("#addTag").onclick=()=>bulkTag(false);$("#removeTag").onclick=()=>bulkTag(true);
 $("#menuBtn").onclick=()=>$("#menu").hidden=!$("#menu").hidden;$("#menuShelf").onclick=()=>$("#menu").hidden=true;
+
+let shopStream=null,shopScanning=false;
+const normIsbn=s=>String(s||"").replace(/\D/g,"");
+function showShopResult(isbn){
+ const n=normIsbn(isbn);$("#shopIsbn").value=n;
+ if(!(n.length===10||n.length===13)){ $("#shopResult").innerHTML='<div class="shop-empty">ISBNは10桁または13桁で入力してください。</div>';return}
+ const b=books().find(x=>normIsbn(x.isbn)===n);
+ $("#shopResult").innerHTML=b?`<div class="shop-owned"><div class="shop-status">✓ 所有済み</div><div class="shop-title">${esc(b.title||"")}</div><div class="shop-meta">${esc(b.author||"作者未登録")} ｜ ${esc(b.publisher||"出版社未登録")}</div><div class="shop-meta">ISBN ${esc(n)}</div></div>`:`<div class="shop-notowned"><div class="shop-status">未所有</div><div>このISBNは現在の本棚には登録されていません。</div><div class="shop-meta">ISBN ${esc(n)}</div></div>`;
+}
+async function stopShopCamera(){shopScanning=false;if(shopStream){shopStream.getTracks().forEach(t=>t.stop());shopStream=null}const v=$("#barcodeVideo");if(v)v.srcObject=null;$("#cameraArea").hidden=true}
+async function startShopCamera(){
+ if(!("BarcodeDetector" in window)){alert("このブラウザではバーコード自動読取に対応していません。ISBNを手入力してください。");return}
+ try{const d=new BarcodeDetector({formats:["ean_13","ean_8"]});shopStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}}});const v=$("#barcodeVideo");v.srcObject=shopStream;await v.play();$("#cameraArea").hidden=false;shopScanning=true;
+ const loop=async()=>{if(!shopScanning)return;try{const c=await d.detect(v);if(c.length){const raw=normIsbn(c[0].rawValue);if(raw.length===13&&(raw.startsWith("978")||raw.startsWith("979"))){showShopResult(raw);await stopShopCamera();return}}}catch(e){}requestAnimationFrame(loop)};loop()
+ }catch(e){await stopShopCamera();alert("カメラを使用できませんでした。ISBNを手入力してください。")}
+}
+const shopBtn=$("#openShopCheck");if(shopBtn)shopBtn.onclick=()=>$("#shopCheck").showModal();
+$("#shopClose").onclick=async()=>{await stopShopCamera();$("#shopCheck").close()};
+$("#shopSearch").onclick=()=>showShopResult($("#shopIsbn").value);
+$("#shopIsbn").addEventListener("keydown",e=>{if(e.key==="Enter")showShopResult(e.target.value)});
+$("#startScan").onclick=startShopCamera;$("#shopCheck").addEventListener("close",stopShopCamera);
+
 draw();
 })();
