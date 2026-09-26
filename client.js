@@ -47,6 +47,28 @@ $("#registerSave").onclick=()=>{const title=$("#rTitle").value.trim(),isbn=normI
 
 let shopStream=null,shopScanning=false; let shopControls=null;
 const normIsbn=s=>String(s||"").replace(/\D/g,"");
+let zxingLoadPromise=null;
+function loadZXing(){
+  if(window.ZXingBrowser?.BrowserMultiFormatReader)return Promise.resolve(true);
+  if(zxingLoadPromise)return zxingLoadPromise;
+  const urls=[
+    "https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js",
+    "https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"
+  ];
+  zxingLoadPromise=new Promise(resolve=>{
+    let i=0;
+    const next=()=>{
+      if(i>=urls.length){resolve(false);return;}
+      const sc=document.createElement("script");
+      sc.src=urls[i++];sc.async=true;
+      sc.onload=()=>resolve(!!window.ZXingBrowser?.BrowserMultiFormatReader);
+      sc.onerror=next;
+      document.head.appendChild(sc);
+    };
+    next();
+  });
+  return zxingLoadPromise;
+}
 function showShopResult(isbn){
  const n=normIsbn(isbn);$("#shopIsbn").value=n;
  if(!(n.length===10||n.length===13)){ $("#shopResult").innerHTML='<div class="shop-empty">ISBNは10桁または13桁で入力してください。</div>';return}
