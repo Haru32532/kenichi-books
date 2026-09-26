@@ -7,7 +7,7 @@ try{overrides=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){}
 try{tags=JSON.parse(localStorage.getItem(TAGKEY)||"[]")||[]}catch(e){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(overrides));localStorage.setItem(TAGKEY,JSON.stringify(tags))}catch(e){}};
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const books=()=>MASTER.map(b=>({...b,...(overrides[b.id]||{}),tags:Array.isArray(overrides[b.id]?.tags)?overrides[b.id].tags:(b.tags||[])})).filter(b=>!b.deleted);
+const USER_BOOKS_KEY="kenchan_user_books_v1";let userBooks=[];try{userBooks=JSON.parse(localStorage.getItem(USER_BOOKS_KEY)||"[]");if(!Array.isArray(userBooks))userBooks=[]}catch(e){userBooks=[]}const saveUserBooks=()=>localStorage.setItem(USER_BOOKS_KEY,JSON.stringify(userBooks));const books=()=>[...MASTER,...userBooks].map(b=>({...b,...(overrides[b.id]||{}),tags:Array.isArray(overrides[b.id]?.tags)?overrides[b.id].tags:(b.tags||[])})).filter(b=>!b.deleted);
 function allTags(){let s=new Set(tags);books().forEach(b=>(b.tags||[]).forEach(t=>s.add(t)));return [...s].filter(Boolean).sort((a,b)=>a.localeCompare(b,"ja"))}
 
 const AGE_OPTIONS=["0歳","1歳","2歳","3歳","4歳","5歳","6歳"];
@@ -39,13 +39,20 @@ function bulkTag(remove){let t=$("#bulkTag").value;if(!t)return;selected.forEach
 $("#addTag").onclick=()=>bulkTag(false);$("#removeTag").onclick=()=>bulkTag(true);
 $("#menuBtn").onclick=()=>$("#menu").hidden=!$("#menu").hidden;$("#menuShelf").onclick=()=>$("#menu").hidden=true;
 
+function renderRegisterChecks(){$("#registerAgeChecks").innerHTML=AGE_OPTIONS.map(a=>`<label><input type="checkbox" data-rage="${a}">${a}</label>`).join("");$("#registerTagChecks").innerHTML=allTags().map(t=>`<label><input type="checkbox" data-rtag="${esc(t)}">${esc(t)}</label>`).join("")||"<small>タグはまだありません。</small>"}
+function clearRegister(){["rIsbn","rTitle","rAuthor","rPublisher","rNotes"].forEach(id=>$("#"+id).value="");$("#rFav").checked=false;$("#registerMsg").innerHTML="";renderRegisterChecks()}
+function openRegisterWithIsbn(isbn=""){stopShopCamera();if($("#shopCheck").open)$("#shopCheck").close();clearRegister();$("#rIsbn").value=normIsbn(isbn);$("#registerBook").showModal()}
+$("#openRegister").onclick=()=>{$("#menu").hidden=true;openRegisterWithIsbn("")};$("#registerClose").onclick=()=>$("#registerBook").close();
+$("#registerSave").onclick=()=>{const title=$("#rTitle").value.trim(),isbn=normIsbn($("#rIsbn").value);if(!title){$("#registerMsg").innerHTML='<div class="shop-notowned">タイトルを入力してください。</div>';return}if(isbn&&books().some(b=>normIsbn(b.isbn)===isbn)){$("#registerMsg").innerHTML='<div class="shop-notowned">このISBNはすでに本棚に登録されています。</div>';return}userBooks.push({id:"USER-"+Date.now(),title,author:$("#rAuthor").value.trim(),publisher:$("#rPublisher").value.trim(),isbn,ages:$$("[data-rage]:checked").map(x=>x.dataset.rage),tags:$$("[data-rtag]:checked").map(x=>x.dataset.rtag),favorite:$("#rFav").checked,notes:$("#rNotes").value.trim()});saveUserBooks();$("#registerBook").close();draw();alert("本棚に登録しました。")};
+
 let shopStream=null,shopScanning=false;
 const normIsbn=s=>String(s||"").replace(/\D/g,"");
 function showShopResult(isbn){
  const n=normIsbn(isbn);$("#shopIsbn").value=n;
  if(!(n.length===10||n.length===13)){ $("#shopResult").innerHTML='<div class="shop-empty">ISBNは10桁または13桁で入力してください。</div>';return}
  const b=books().find(x=>normIsbn(x.isbn)===n);
- $("#shopResult").innerHTML=b?`<div class="shop-owned"><div class="shop-status">✓ 所有済み</div><div class="shop-title">${esc(b.title||"")}</div><div class="shop-meta">${esc(b.author||"作者未登録")} ｜ ${esc(b.publisher||"出版社未登録")}</div><div class="shop-meta">ISBN ${esc(n)}</div></div>`:`<div class="shop-notowned"><div class="shop-status">未所有</div><div>このISBNは現在の本棚には登録されていません。</div><div class="shop-meta">ISBN ${esc(n)}</div></div>`;
+ $("#shopResult").innerHTML=b?`<div class="shop-owned"><div class="shop-status">✓ 所有済み</div><div class="shop-title">${esc(b.title||"")}</div><div class="shop-meta">${esc(b.author||"作者未登録")} ｜ ${esc(b.publisher||"出版社未登録")}</div><div class="shop-meta">ISBN ${esc(n)}</div></div>`:`<div class="shop-notowned"><div class="shop-status">未所有</div><div>このISBNは現在の本棚には登録されていません。</div><div class="shop-meta">ISBN ${esc(n)}</div><button type="button" id="shopToRegister" class="shop-register-btn">この本を登録</button></div>`;
+;const sr=$("#shopToRegister");if(sr)sr.onclick=()=>openRegisterWithIsbn(n)
 }
 async function stopShopCamera(){shopScanning=false;if(shopStream){shopStream.getTracks().forEach(t=>t.stop());shopStream=null}const v=$("#barcodeVideo");if(v)v.srcObject=null;$("#cameraArea").hidden=true}
 async function startShopCamera(){
@@ -54,7 +61,7 @@ async function startShopCamera(){
  const loop=async()=>{if(!shopScanning)return;try{const c=await d.detect(v);if(c.length){const raw=normIsbn(c[0].rawValue);if(raw.length===13&&(raw.startsWith("978")||raw.startsWith("979"))){showShopResult(raw);await stopShopCamera();return}}}catch(e){}requestAnimationFrame(loop)};loop()
  }catch(e){await stopShopCamera();alert("カメラを使用できませんでした。ISBNを手入力してください。")}
 }
-const shopBtn=$("#openShopCheck");if(shopBtn)shopBtn.onclick=()=>$("#shopCheck").showModal();
+const shopBtn=$("#openShopCheck");if(shopBtn)shopBtn.onclick=()=>{$("#menu").hidden=true;$("#shopCheck").showModal()};
 $("#shopClose").onclick=async()=>{await stopShopCamera();$("#shopCheck").close()};
 $("#shopSearch").onclick=()=>showShopResult($("#shopIsbn").value);
 $("#shopIsbn").addEventListener("keydown",e=>{if(e.key==="Enter")showShopResult(e.target.value)});
