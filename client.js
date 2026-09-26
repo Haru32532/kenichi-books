@@ -45,30 +45,58 @@ function openRegisterWithIsbn(isbn=""){stopShopCamera();if($("#shopCheck").open)
 $("#openRegister").onclick=()=>{$("#menu").hidden=true;openRegisterWithIsbn("")};$("#registerClose").onclick=()=>$("#registerBook").close();
 $("#registerSave").onclick=()=>{const title=$("#rTitle").value.trim(),isbn=normIsbn($("#rIsbn").value);if(!title){$("#registerMsg").innerHTML='<div class="shop-notowned">タイトルを入力してください。</div>';return}if(isbn&&books().some(b=>normIsbn(b.isbn)===isbn)){$("#registerMsg").innerHTML='<div class="shop-notowned">このISBNはすでに本棚に登録されています。</div>';return}userBooks.push({id:"USER-"+Date.now(),title,author:$("#rAuthor").value.trim(),publisher:$("#rPublisher").value.trim(),isbn,ages:$$("[data-rage]:checked").map(x=>x.dataset.rage),tags:$$("[data-rtag]:checked").map(x=>x.dataset.rtag),favorite:$("#rFav").checked,notes:$("#rNotes").value.trim()});saveUserBooks();$("#registerBook").close();draw();alert("本棚に登録しました。")};
 
-let shopStream=null,shopScanning=false,shopControls=null;
+let shopStream=null,shopScanning=false;
+const normIsbn=s=>String(s||"").replace(/\D/g,"");
+function showShopResult(isbn){
+ const n=normIsbn(isbn);$("#shopIsbn").value=n;
+ if(!(n.length===10||n.length===13)){ $("#shopResult").innerHTML='<div class="shop-empty">ISBNは10桁または13桁で入力してください。</div>';return}
+ const b=books().find(x=>normIsbn(x.isbn)===n);
+ $("#shopResult").innerHTML=b?`<div class="shop-owned"><div class="shop-status">✓ 所有済み</div><div class="shop-title">${esc(b.title||"")}</div><div class="shop-meta">${esc(b.author||"作者未登録")} ｜ ${esc(b.publisher||"出版社未登録")}</div><div class="shop-meta">ISBN ${esc(n)}</div></div>`:`<div class="shop-notowned"><div class="shop-status">未所有</div><div>このISBNは現在の本棚には登録されていません。</div><div class="shop-meta">ISBN ${esc(n)}</div><button type="button" id="shopToRegister" class="shop-register-btn">この本を登録</button></div>`;
+;const sr=$("#shopToRegister");if(sr)sr.onclick=()=>openRegisterWithIsbn(n)
+}
 async function stopShopCamera(){
- try{if(shopControls)shopControls.stop()}catch(e){} shopControls=null; shopScanning=false;
- if(shopStream){try{shopStream.getTracks().forEach(t=>t.stop())}catch(e){} shopStream=null}
- const v=$("#barcodeVideo"); if(v){try{v.pause()}catch(e){} try{v.srcObject=null}catch(e){}}
- $("#cameraArea").hidden=true;
+  shopScanning=false;
+  try{if(shopControls)shopControls.stop()}catch(e){}
+  shopControls=null;
+  if(shopStream){try{shopStream.getTracks().forEach(t=>t.stop())}catch(e){}shopStream=null}
+  const v=$("#barcodeVideo");if(v){try{v.pause()}catch(e){}try{v.srcObject=null}catch(e){}}
+  $("#cameraArea").hidden=true;
 }
 async function startShopCamera(){
- if(shopScanning)return;
- if(!navigator.mediaDevices?.getUserMedia){alert("このブラウザではカメラを利用できません。ISBNを手入力してください。");return}
- if(!window.ZXingBrowser?.BrowserMultiFormatReader){alert("バーコード読取機能を読み込めませんでした。通信状態を確認して、もう一度お試しください。");return}
- shopScanning=true; $("#cameraArea").hidden=false;
- $("#shopResult").innerHTML='<div class="shop-neutral">カメラを本のISBNバーコードに向けてください。</div>';
- try{
-  const reader=new ZXingBrowser.BrowserMultiFormatReader();
-  shopControls=await reader.decodeFromConstraints({audio:false,video:{facingMode:{ideal:"environment"}}},$("#barcodeVideo"),(result,error,controls)=>{
-   if(!result)return;
-   const n=normIsbn(typeof result.getText==="function"?result.getText():(result.text||""));
-   if(n.length===13&&(n.startsWith("978")||n.startsWith("979"))){
-    $("#shopIsbn").value=n; try{controls.stop()}catch(e){} shopControls=null; shopScanning=false; $("#cameraArea").hidden=true; showShopResult(n);
-   }
-  });
- }catch(e){await stopShopCamera();alert("カメラを起動できませんでした。iPhoneのカメラ許可を確認してください。ISBNの手入力も利用できます。")}
+  if(shopScanning)return;
+  if(!navigator.mediaDevices?.getUserMedia){
+    alert("このブラウザではカメラを利用できません。ISBNを手入力してください。");return;
+  }
+  if(!(await loadZXing())){
+    alert("バーコード読取機能を読み込めませんでした。ISBNの手入力はそのまま利用できます。");return;
+  }
+  shopScanning=true;$("#cameraArea").hidden=false;
+  $("#shopResult").innerHTML='<div class="shop-neutral">カメラを本のISBNバーコードに向けてください。</div>';
+  try{
+    const reader=new ZXingBrowser.BrowserMultiFormatReader();
+    shopControls=await reader.decodeFromConstraints(
+      {audio:false,video:{facingMode:{ideal:"environment"}}},
+      $("#barcodeVideo"),
+      (result,error,controls)=>{
+        if(!result)return;
+        const n=normIsbn(typeof result.getText==="function"?result.getText():(result.text||""));
+        if(n.length===13&&(n.startsWith("978")||n.startsWith("979"))){
+          $("#shopIsbn").value=n;
+          try{controls.stop()}catch(e){}
+          shopControls=null;shopScanning=false;$("#cameraArea").hidden=true;
+          showShopResult(n);
+        }
+      }
+    );
+  }catch(e){
+    await stopShopCamera();
+    alert("カメラを起動できませんでした。iPhoneのカメラ許可を確認してください。ISBNの手入力は利用できます。");
+  }
 }
+const shopBtn=$("#openShopCheck");if(shopBtn)shopBtn.onclick=()=>{$("#menu").hidden=true;$("#shopCheck").showModal()};
+$("#shopClose").onclick=async()=>{await stopShopCamera();$("#shopCheck").close()};
+$("#shopSearch").onclick=()=>showShopResult($("#shopIsbn").value);
+$("#shopIsbn").addEventListener("keydown",e=>{if(e.key==="Enter")showShopResult(e.target.value)});
 $("#startScan").onclick=startShopCamera;$("#shopCheck").addEventListener("close",stopShopCamera);
 
 draw();
