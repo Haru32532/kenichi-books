@@ -2,7 +2,16 @@
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const readKey='kenchan_reading_events_v2', monthKey='kenchan_monthly_records_v2', settingsKey='kenchan_settings_v2', candKey='kenchan_candidates_v2', coverKey='kenchan_covers_v1';
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch(e){return d}}, save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
-let reads=load(readKey,null); if(!Array.isArray(reads)){reads=(window.MIETE_SEED||[]).filter(x=>x.kind==='book');save(readKey,reads)}
+let reads=load(readKey,[]); if(!Array.isArray(reads)) reads=[];
+// Every release may contain additional historical Miete PDFs. Merge the bundled seed
+// into the existing device history without overwriting app-entered reactions/comments.
+const seedReads=(window.MIETE_SEED||[]).filter(x=>x.kind==='book');
+const readSig=r=>[r.date||'',r.time||'',normSeed(r.title),+r.count||1].join('|');
+function normSeed(s){return String(s||'').normalize('NFKC').toLowerCase().replace(/[\s　・･?？!！「」『』（）()―ー\-]/g,'')}
+const existingSigs=new Set(reads.map(readSig)); let seedAdded=0;
+for(const r of seedReads){const k=readSig(r);if(!existingSigs.has(k)){reads.push(r);existingSigs.add(k);seedAdded++}}
+reads.sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.time||'').localeCompare(b.time||''));
+if(seedAdded||!localStorage.getItem(readKey)) save(readKey,reads);
 let months=load(monthKey,{}), settings=load(settingsKey,{name:'けんいち',honor:'くん',birthday:'2025-04-05',goal:10000,monthGoal:500,calilKey:'',libs:[{label:'A',name:'メイン図書館',systemid:'',url:''},{label:'B',name:'第2図書館',systemid:'',url:''},{label:'C',name:'第3図書館',systemid:'',url:''}]}), candidates=load(candKey,{}), covers=load(coverKey,{});
 const master=()=>{const ov=load('kenchan_clean_overrides_v1',{}), ub=load('kenchan_user_books_v1',[]);return [...(window.MASTER_BOOKS||[]),...ub].map(b=>({...b,...(ov[b.id]||{})})).filter(b=>!b.deleted)};
 const norm=s=>(s||'').normalize('NFKC').toLowerCase().replace(/[\s　・･?？!！「」『』（）()―ー\-]/g,'').replace(/がたんごとんがたんごとん/g,'がたんごとんがたんごとん').replace(/ぐるんぱのようちえん/g,'ぐるんぱようちえん').replace(/^新版/,'');
