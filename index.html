@@ -21,6 +21,107 @@ dialog{width:min(92vw,520px);border:0;border-radius:14px;padding:18px}dialog lab
   .edit-actions button{font-size:17px;padding:9px 11px}
   .edit-actions .delete-action{font-size:13px;padding:6px 8px}
 }
+
+/* スマホ用：まとめて編集を縦に整理 */
+#bulkbar{
+  display:grid !important;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  align-items:stretch;
+  margin:12px 0 18px;
+}
+#bulkbar #selected{
+  grid-column:1 / -1;
+  font-size:18px;
+  padding:4px 2px;
+}
+#bulkbar select{
+  width:100%;
+  min-width:0;
+  min-height:48px;
+  font-size:16px;
+  padding:8px;
+}
+#bulkbar button{
+  min-height:48px;
+  font-size:16px;
+  font-weight:700;
+  padding:8px 10px;
+  white-space:normal;
+}
+#bulkbar #bulkAge{grid-column:1 / -1}
+#bulkbar #bulkTag{grid-column:1 / -1}
+#bulkbar #bulkDone{grid-column:1 / -1}
+@media(min-width:700px){
+  #bulkbar{
+    grid-template-columns:auto minmax(160px,1fr) auto auto minmax(160px,1fr) auto auto auto;
+    align-items:center;
+  }
+  #bulkbar #selected,
+  #bulkbar #bulkAge,
+  #bulkbar #bulkTag,
+  #bulkbar #bulkDone{grid-column:auto}
+}
+
+/* まとめて編集：スマホ固定レイアウト */
+#bulkBar.bulk-edit-panel{
+  display:block;
+  overflow:visible;
+  padding:12px 0 18px;
+}
+#bulkBar[hidden]{display:none !important}
+.bulk-selected{
+  font-size:18px;
+  margin:0 0 10px;
+}
+.bulk-section{
+  background:#f7f7f7;
+  border:1px solid #ddd;
+  border-radius:14px;
+  padding:12px;
+  margin:10px 0;
+}
+.bulk-label{
+  font-size:16px;
+  font-weight:700;
+  margin-bottom:8px;
+}
+#bulkBar select{
+  display:block;
+  width:100%;
+  height:50px;
+  min-width:0;
+  box-sizing:border-box;
+  font-size:16px;
+  padding:8px 12px;
+  border:1px solid #bbb;
+  border-radius:10px;
+  background:white;
+}
+.bulk-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:10px;
+}
+#bulkBar .bulk-actions button{
+  width:100%;
+  min-width:0;
+  min-height:48px;
+  padding:8px 6px;
+  font-size:16px;
+  font-weight:700;
+  white-space:nowrap;
+}
+#bulkBar .bulk-finish{
+  display:block;
+  width:100%;
+  min-height:48px;
+  margin-top:12px;
+  font-size:16px;
+  font-weight:700;
+  white-space:nowrap;
+}
 </style></head>
 <body>
 <header><button id="menuBtn">☰</button><b>けんちゃんの本棚</b></header>
@@ -31,7 +132,33 @@ dialog{width:min(92vw,520px);border:0;border-radius:14px;padding:18px}dialog lab
 <input id="search" placeholder="タイトル・作者・出版社・ISBNで検索">
 <div class="tools"><button id="bulkOn">☑ まとめて編集</button><button id="newTag">＋ タグ作成</button></div>
 <div class="tags" id="ageTabs"></div><div class="tags" id="tagTabs"></div>
-<div class="bulk" id="bulkBar" hidden><b id="selected">0冊</b><select id="bulkAge"><option value="">年齢を選択</option><option>0歳</option><option>1歳</option><option>2歳</option><option>3歳</option><option>4歳</option><option>5歳</option><option>6歳</option></select><button id="addAge">年齢追加</button><button id="removeAge">年齢解除</button><select id="bulkTag"></select><button id="addTag">タグ追加</button><button id="removeTag">タグ解除</button><button id="bulkOff">終了</button></div>
+<div class="bulk-edit-panel" id="bulkBar" hidden>
+  <div class="bulk-selected"><b id="selected">0冊</b> 選択</div>
+
+  <section class="bulk-section">
+    <div class="bulk-label">対象年齢</div>
+    <select id="bulkAge">
+      <option value="">年齢を選択</option>
+      <option>0歳</option><option>1歳</option><option>2歳</option>
+      <option>3歳</option><option>4歳</option><option>5歳</option><option>6歳</option>
+    </select>
+    <div class="bulk-actions">
+      <button id="addAge">年齢を追加</button>
+      <button id="removeAge">年齢を解除</button>
+    </div>
+  </section>
+
+  <section class="bulk-section">
+    <div class="bulk-label">タグ</div>
+    <select id="bulkTag"></select>
+    <div class="bulk-actions">
+      <button id="addTag">タグを追加</button>
+      <button id="removeTag">タグを解除</button>
+    </div>
+  </section>
+
+  <button id="bulkOff" class="bulk-finish">まとめて編集を終了</button>
+</div>
 <div id="list"></div>
 </main>
 <dialog id="edit"><h2>本を編集</h2><input id="eid" type="hidden">
