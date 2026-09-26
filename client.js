@@ -135,7 +135,7 @@ async function startEditCamera(){
   const reader=new ZXingBrowser.BrowserMultiFormatReader();
   editControls=await reader.decodeFromConstraints({audio:false,video:{facingMode:{ideal:"environment"}}},$("#editBarcodeVideo"),(result,error,controls)=>{
    if(!result)return;const n=normIsbn(typeof result.getText==="function"?result.getText():(result.text||""));
-   if(n.length===13&&(n.startsWith("978")||n.startsWith("979"))){$("#eisbn").value=n;$("#editCodeMsg").textContent="ISBNを読み取りました。続けて192コードも読み取れます。";return}
+   if(n.length===13&&(n.startsWith("978")||n.startsWith("979"))){$("#eisbn").value=n;$("#editCodeMsg").textContent="ISBNを読み取りました。書誌情報を検索します。続けて192コードも読み取れます。";if(window.lookupBib)window.lookupBib(n);return}
    const p=parseJan2(n);if(p){$("#ejan2").value=p.jan2;$("#eccode").value=p.ccode;$("#eprice").value=p.price;$("#editCodeMsg").textContent=`192コードを読み取りました：${p.ccode}／本体価格 ${Number(p.price).toLocaleString()}円`;return}
   });
  }catch(e){await stopEditCamera();alert("カメラを起動できませんでした。iPhoneのカメラ許可を確認してください。");}
