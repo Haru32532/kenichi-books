@@ -1,1 +1,1 @@
-{"name": "けんちゃんの本棚｜読書伴走", "short_name": "けんちゃんの本棚", "start_url": "/", "display": "standalone", "background_color": "#faf8f3", "theme_color": "#ffffff"}
+{"name":"おうち図書館","short_name":"おうち図書館","start_url":"./","display":"standalone","background_color":"#fffaf2","theme_color":"#fffaf2","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
